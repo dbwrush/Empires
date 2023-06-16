@@ -20,6 +20,13 @@ public class KeyManager implements KeyListener {
 
     }
 
+    public boolean isKeyPressed(int keyCode) {
+        if(keyCode >= 0 && keyCode < keys.length) {
+            return keys[keyCode];
+        }
+        return false;
+    }
+
     @Override
     public void keyPressed(KeyEvent keyEvent) {
         keys[keyEvent.getKeyCode()] = true;

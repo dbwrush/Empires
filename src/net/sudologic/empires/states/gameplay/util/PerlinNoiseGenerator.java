@@ -1,4 +1,4 @@
-package net.sudologic.empires;
+package net.sudologic.empires.states.gameplay.util;
 
 import java.util.Random;
 
