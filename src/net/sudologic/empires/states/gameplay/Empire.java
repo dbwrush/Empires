@@ -49,7 +49,7 @@ public class Empire {
             e.allies.remove(this);
         }
         if(!enemies.contains(e)) {
-            //System.out.println(name + " is now an enemy of " + e.getName());
+            System.out.println(name + " is now an enemy of " + e.getName());
             enemies.add(e);
             e.enemies.add(this);
         }
@@ -59,15 +59,18 @@ public class Empire {
         if(enemies.contains(e)) {
             enemies.remove(e);
             e.enemies.remove(this);
-            //System.out.println(name + " made peace with " + e.getName());
+            System.out.println(name + " made peace with " + e.getName());
         }
     }
 
     public void setAlly(Empire e) {
         makePeace(e);
+        if(allies.contains(e)) {
+            return;
+        }
         allies.add(e);
         e.allies.add(this);
-        //System.out.println(name + " is now allied with " + e.getName());
+        System.out.println(name + " is now allied with " + e.getName());
     }
 
     public double ideoDifference(Empire e) {

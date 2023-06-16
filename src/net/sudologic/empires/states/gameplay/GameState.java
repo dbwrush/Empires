@@ -44,7 +44,7 @@ public class GameState extends State {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
         habitablePixels = new ArrayList<>();
-        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.04f, 4);
+        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.01f, 4);
         float[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
             for(int y = 0; y < pixels[0].length; y++) {

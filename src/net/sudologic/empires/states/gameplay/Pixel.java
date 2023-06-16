@@ -48,13 +48,16 @@ public class Pixel {
     public void tick() {
         if (empire != null) {
             strength += habitability;
+            if(strength > 255) {
+                strength = 255;
+            }
             friendlyNeighbors = new ArrayList<>(neighbors.size());
-            float tneed = 0;
+            float tneed = 1;
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
                     if (p.habitability < strength) {
                         if (p.empire == null) {
-                            tneed = 100f;
+                            tneed = 40f;
                             empire.addTerritory(p);
                             strength -= p.habitability;
                         } else if (empire.getEnemies().contains(p.empire) && p.strength < strength) {
@@ -68,14 +71,14 @@ public class Pixel {
                     if (p.empire != null) {
                         if (p.empire != empire) {
                             float ideoDiff = (float) empire.ideoDifference(p.empire);
-                            float coopIso = (float) ((empire.getCoopIso() + p.empire.getCoopIso()) / 2);
+                            float coopIso = (float) ((empire.getCoopIso() + p.empire.getCoopIso()) / 4);
                             if (ideoDiff < coopIso) {
                                 empire.setAlly(p.empire);
                             }
-                            if (ideoDiff + (borderFriction / 5) > gameState.getWarThreshold() && !empire.getEnemies().contains(p.empire)) {
+                            if (borderFriction > gameState.getWarThreshold() && coopIso < ideoDiff && !empire.getEnemies().contains(p.empire)) {
                                 empire.setEnemy(p.empire);
                             }
-                            if (empire.getEnemies().contains(p.empire) && (ideoDiff + (borderFriction / 5) < gameState.getWarThreshold())) {
+                            if (empire.getEnemies().contains(p.empire) && ((ideoDiff + (borderFriction / 5)) * 2 < gameState.getWarThreshold())) {
                                 empire.makePeace(p.empire);
                             }
                             if (!empire.getAllies().contains(p.empire)) {
@@ -107,7 +110,7 @@ public class Pixel {
                 }
                 strength *= tneed / totalNeed;
             }
-            float avgNeed = totalNeed / (friendlyNeighbors.size() + 1) * 0.99f;
+            float avgNeed = totalNeed / (friendlyNeighbors.size() + 1) * 0.999f;
             need = tneed;
             if (avgNeed > tneed) {
                 need = avgNeed;
