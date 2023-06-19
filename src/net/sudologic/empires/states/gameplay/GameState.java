@@ -8,6 +8,7 @@ import net.sudologic.empires.states.State;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class GameState extends State {
     private ArrayList<Empire> empires, dead;
@@ -76,7 +77,7 @@ public class GameState extends State {
             boolean hasCapital = false;
             while(!hasCapital) {
                 Pixel p = pixels[(int) (Math.random() * pixels.length)][(int) (Math.random() * pixels[0].length)];
-                if(p.getEmpire() == null) {
+                if(p.getEmpire() == null && p.isHabitable()) {
                     e.addTerritory(p);
                     hasCapital = true;
                 }
@@ -126,6 +127,9 @@ public class GameState extends State {
 
     @Override
     public void tick() {
+        if(warThreshold > 0 && Math.random() < 0.01) {
+            warThreshold -= 1;
+        }
         if(km.isKeyPressed(KeyEvent.VK_1)) {
             colorMode = Pixel.ColorMode.empire;
         }
@@ -138,10 +142,18 @@ public class GameState extends State {
         if(km.isKeyPressed(KeyEvent.VK_4)) {
             colorMode = Pixel.ColorMode.need;
         }
+        if(km.isKeyPressed(KeyEvent.VK_5)) {
+            colorMode = Pixel.ColorMode.age;
+        }
+        if(km.isKeyPressed(KeyEvent.VK_6)) {
+            colorMode = Pixel.ColorMode.friction;
+        }
+        Collections.shuffle(empires);
         for(Empire e : empires) {
+            e.tick();
             if(e.getTerritory().size() == 0) {
                 dead.add(e);
-                //System.out.println(e.getName() + " has been eliminated.");
+                System.out.println(e.getName() + " has been eliminated.");
             }
         }
         for(Empire e : dead) {
@@ -149,7 +161,11 @@ public class GameState extends State {
         }
         dead = new ArrayList<>();
 
+        Collections.shuffle(habitablePixels);
         for(Pixel p : habitablePixels) {
+            if(boats.size() < maxBoats && p.getEmpire() != null && Math.random() < 0.001) {
+                p.spawnBoat();
+            }
             p.tick();
         }
         for(Boat b : boats) {
@@ -161,15 +177,6 @@ public class GameState extends State {
             }
         }
         remBoats = new ArrayList<>();
-
-        for(int i = 0; i < Math.random() * maxBoats; i++) {
-            int x = (int) (Math.random() * pixels.length);
-            int y = (int) (Math.random() * pixels[0].length);
-            pixels[x][y].spawnBoat();
-            if(boats.size() >= maxBoats) {
-                i = maxBoats;
-            }
-        }
     }
 
     public void setColorMode(Pixel.ColorMode colorMode) {

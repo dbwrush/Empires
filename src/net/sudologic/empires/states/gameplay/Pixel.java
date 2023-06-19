@@ -2,6 +2,7 @@ package net.sudologic.empires.states.gameplay;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Pixel {
 
@@ -9,10 +10,13 @@ public class Pixel {
         empire,
         strength,
         ideology,
-        need
+        need,
+        age,
+        friction
     }
 
-    private int x, y, scale;
+    private int x, y, scale, age;
+    private static int maxAge;
     private float strength, borderFriction, habitability, need;
     private Empire empire;
     private GameState gameState;
@@ -27,9 +31,23 @@ public class Pixel {
         this.need = 0;
     }
 
+    public void revolt() {
+        Empire old = empire;
+        System.out.println("Revolt in " + empire.getName());
+        empire.removeTerritory(this);
+        double tech = empire.getTechnology();
+        empire.setTechnology(empire.getTechnology() / 5);
+        setEmpire(new Empire());
+        empire.addTerritory(this);
+        strength = habitability * 20;
+        empire.setEnemy(old);
+    }
+
     public void setEmpire(Empire empire) {
         this.empire = empire;
+        age = 0;
         neighbors = gameState.getNeighbors(x, y);
+        Collections.shuffle(neighbors);
     }
 
     public Empire getEmpire() {
@@ -47,16 +65,22 @@ public class Pixel {
 
     public void tick() {
         if (empire != null) {
-            strength += habitability;
-            if(strength > 255) {
-                strength = 255;
+            borderFriction = 0;
+            age += 1;
+            if(age > maxAge) {
+                maxAge = age;
             }
-            friendlyNeighbors = new ArrayList<>(neighbors.size());
+            strength += habitability * empire.getTechnology();
+            if(strength > 255 * empire.getTechnology()) {
+                strength = (float) (255 * empire.getTechnology());
+            }
+            friendlyNeighbors = new ArrayList<>();
             float tneed = 1;
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
                     if (p.habitability < strength) {
                         if (p.empire == null) {
+                            //System.out.println("Empire is null!");
                             tneed = 40f;
                             empire.addTerritory(p);
                             strength -= p.habitability;
@@ -162,6 +186,9 @@ public class Pixel {
                     if (s > 255) {
                         s = 255;
                     }
+                    if(s < 0) {
+                        s = 0;
+                    }
                     return new Color(s, 0, 0);
                 }
             case ideology:
@@ -175,6 +202,25 @@ public class Pixel {
                         n = 255;
                     }
                     return new Color(n, 0, 0);
+                }
+            case age:
+                if(empire != null) {
+                    float hue = (float) age / maxAge * 120;  // 120 degrees covers the range from red to green
+                    float saturation = 1.0f;
+                    float brightness = 1.0f;
+
+                    return Color.getHSBColor(hue / 360, saturation, brightness);
+                }
+            case friction:
+                if(empire != null) {
+                    int f = (int) (borderFriction - empire.getCoopIso());
+                    if(f > 255) {
+                        f = 255;
+                    }
+                    if(f < 0) {
+                        f = 0;
+                    }
+                    return new Color(f, 0, 0);
                 }
             default:
                 if (habitability == 0) {

@@ -13,6 +13,10 @@ public class Empire {
     private ArrayList<Pixel> territory;
     private double[] ideology;
 
+    private double technology;
+
+    private int maxSize = 0;
+
     private Color color;
 
     public Empire() {
@@ -23,12 +27,34 @@ public class Empire {
         territory = new ArrayList<>();
         enemies = new ArrayList<>();
         allies = new ArrayList<>();
+        technology = Math.random();
+    }
+
+    public void tick() {
+        if(Math.random() < 0.01) {
+            technology *= 1.1;
+        }
+        if(maxSize > 0 && Math.random() > territory.size() / maxSize && territory.size() > 0) {
+            Pixel p = territory.get((int) (Math.random() * territory.size()));
+            p.revolt();
+        }
+        if(territory.size() > maxSize) {
+            maxSize = territory.size();
+        }
     }
 
     public void removeTerritory(Pixel pixel) {
         if(territory.contains(pixel)) {
             territory.remove(pixel);
         }
+    }
+
+    public void setTechnology(double technology) {
+        this.technology = technology;
+    }
+
+    public double getTechnology() {
+        return technology;
     }
 
     public double getCoopIso() {
@@ -49,7 +75,7 @@ public class Empire {
             e.allies.remove(this);
         }
         if(!enemies.contains(e)) {
-            System.out.println(name + " is now an enemy of " + e.getName());
+            //System.out.println(name + " is now an enemy of " + e.getName());
             enemies.add(e);
             e.enemies.add(this);
         }
@@ -59,7 +85,7 @@ public class Empire {
         if(enemies.contains(e)) {
             enemies.remove(e);
             e.enemies.remove(this);
-            System.out.println(name + " made peace with " + e.getName());
+            //System.out.println(name + " made peace with " + e.getName());
         }
     }
 
@@ -70,7 +96,7 @@ public class Empire {
         }
         allies.add(e);
         e.allies.add(this);
-        System.out.println(name + " is now allied with " + e.getName());
+        //System.out.println(name + " is now allied with " + e.getName());
     }
 
     public double ideoDifference(Empire e) {

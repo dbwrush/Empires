@@ -20,7 +20,7 @@ public class Boat {
     }
 
     public void tick() {
-        strength *= 0.9;
+        strength *= 0.999;
 
         ArrayList<Pixel> neighbors = (ArrayList<Pixel>) gs.getNeighbors(x, y);
         Pixel target = neighbors.get((int) (Math.random() * neighbors.size()));
@@ -35,7 +35,6 @@ public class Boat {
                     target.setStrength((float) (strength - target.getHabitability()));
                 }
                 //System.out.println("Boat landed");
-                gs.removeBoat(this);
             } else if(empire.getEnemies().contains(target.getEmpire())) {
                 if(target.getStrength() < strength) {
                     //System.out.println("Boat captured territory for " + empire.getName());
@@ -44,10 +43,12 @@ public class Boat {
                 }
                 //System.out.println("Boat landed");
                 empire.addTerritory(target);
-                gs.removeBoat(this);
+            } else {
+                target.setStrength((float) (target.getStrength() + strength));
             }
+            gs.removeBoat(this);
         }
-        if(strength <= 1) {
+        if(strength <= 10) {
             //System.out.println("Boat died");
             gs.removeBoat(this);
         }
