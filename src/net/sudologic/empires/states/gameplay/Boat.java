@@ -21,6 +21,9 @@ public class Boat {
 
     public void tick() {
         strength *= 0.999;
+        if(empire.getTerritory().size() == 0) {
+            gs.removeBoat(this);
+        }
 
         ArrayList<Pixel> neighbors = (ArrayList<Pixel>) gs.getNeighbors(x, y);
         Pixel target = neighbors.get((int) (Math.random() * neighbors.size()));

@@ -9,6 +9,9 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class GameState extends State {
     private ArrayList<Empire> empires, dead;
@@ -45,7 +48,7 @@ public class GameState extends State {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
         habitablePixels = new ArrayList<>();
-        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.01f, 4);
+        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.005f, 4);
         float[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
             for(int y = 0; y < pixels[0].length; y++) {
@@ -72,7 +75,7 @@ public class GameState extends State {
         empires = new ArrayList<>();
         dead = new ArrayList<>();
         while(empires.size() <= numEmpires) {
-            Empire e = new Empire();
+            Empire e = new Empire(this);
             System.out.println("Spawning " + e.getName());
             boolean hasCapital = false;
             while(!hasCapital) {
@@ -127,56 +130,64 @@ public class GameState extends State {
 
     @Override
     public void tick() {
-        if(warThreshold > 0 && Math.random() < 0.01) {
+        if (warThreshold > 0 && Math.random() < 0.01) {
             warThreshold -= 1;
         }
-        if(km.isKeyPressed(KeyEvent.VK_1)) {
+
+        if (km.isKeyPressed(KeyEvent.VK_1)) {
             colorMode = Pixel.ColorMode.empire;
         }
-        if(km.isKeyPressed(KeyEvent.VK_2)) {
+        if (km.isKeyPressed(KeyEvent.VK_2)) {
             colorMode = Pixel.ColorMode.strength;
         }
-        if(km.isKeyPressed(KeyEvent.VK_3)) {
+        if (km.isKeyPressed(KeyEvent.VK_3)) {
             colorMode = Pixel.ColorMode.ideology;
         }
-        if(km.isKeyPressed(KeyEvent.VK_4)) {
+        if (km.isKeyPressed(KeyEvent.VK_4)) {
             colorMode = Pixel.ColorMode.need;
         }
-        if(km.isKeyPressed(KeyEvent.VK_5)) {
+        if (km.isKeyPressed(KeyEvent.VK_5)) {
             colorMode = Pixel.ColorMode.age;
         }
-        if(km.isKeyPressed(KeyEvent.VK_6)) {
+        if (km.isKeyPressed(KeyEvent.VK_6)) {
             colorMode = Pixel.ColorMode.friction;
         }
+
         Collections.shuffle(empires);
-        for(Empire e : empires) {
+        for (Empire e : empires) {
             e.tick();
-            if(e.getTerritory().size() == 0) {
+            if (e.getTerritory().size() == 0) {
                 dead.add(e);
                 System.out.println(e.getName() + " has been eliminated.");
             }
         }
-        for(Empire e : dead) {
+        for (Empire e : dead) {
             empires.remove(e);
         }
         dead = new ArrayList<>();
 
         Collections.shuffle(habitablePixels);
-        for(Pixel p : habitablePixels) {
-            if(boats.size() < maxBoats && p.getEmpire() != null && Math.random() < 0.001) {
+        for (Pixel p : habitablePixels) {
+            p.tick();
+            if(boats.size() < maxBoats && Math.random() < 0.01) {
                 p.spawnBoat();
             }
-            p.tick();
         }
-        for(Boat b : boats) {
+
+        for (Boat b : boats) {
             b.tick();
         }
-        for(Boat b : remBoats) {
-            if(boats.contains(b)) {
+
+        for (Boat b : remBoats) {
+            if (boats.contains(b)) {
                 boats.remove(b);
             }
         }
         remBoats = new ArrayList<>();
+    }
+
+    public ArrayList<Empire> getEmpires() {
+        return empires;
     }
 
     public void setColorMode(Pixel.ColorMode colorMode) {

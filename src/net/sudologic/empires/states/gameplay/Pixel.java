@@ -15,9 +15,9 @@ public class Pixel {
         friction
     }
 
-    private int x, y, scale, age;
-    private static int maxAge;
-    private float strength, borderFriction, habitability, need;
+    private int x, y, scale;
+    private static int maxAge = 255;
+    private float strength, borderFriction, habitability, need, age;
     private Empire empire;
     private GameState gameState;
     private ArrayList<Pixel> neighbors, friendlyNeighbors;
@@ -33,11 +33,10 @@ public class Pixel {
 
     public void revolt() {
         Empire old = empire;
-        System.out.println("Revolt in " + empire.getName());
-        empire.removeTerritory(this);
-        double tech = empire.getTechnology();
+        //System.out.println("Revolt in " + empire.getName());
         empire.setTechnology(empire.getTechnology() / 5);
-        setEmpire(new Empire());
+        empire.removeTerritory(this);
+        setEmpire(new Empire(gameState));
         empire.addTerritory(this);
         strength = habitability * 20;
         empire.setEnemy(old);
@@ -66,16 +65,16 @@ public class Pixel {
     public void tick() {
         if (empire != null) {
             borderFriction = 0;
-            age += 1;
-            if(age > maxAge) {
-                maxAge = age;
-            }
+            age += 0.5f;
             strength += habitability * empire.getTechnology();
             if(strength > 255 * empire.getTechnology()) {
                 strength = (float) (255 * empire.getTechnology());
             }
             friendlyNeighbors = new ArrayList<>();
             float tneed = 1;
+            if(neighbors == null) {
+                neighbors = gameState.getNeighbors(x, y);
+            }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
                     if (p.habitability < strength) {
@@ -205,7 +204,11 @@ public class Pixel {
                 }
             case age:
                 if(empire != null) {
-                    float hue = (float) age / maxAge * 120;  // 120 degrees covers the range from red to green
+                    int a = (int) age;
+                    if(a > 255) {
+                        a = 255;
+                    }
+                    float hue = (float) a / maxAge * 120;  // 120 degrees covers the range from red to green
                     float saturation = 1.0f;
                     float brightness = 1.0f;
 

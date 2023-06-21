@@ -17,9 +17,11 @@ public class Empire {
 
     private int maxSize = 0;
 
+    private GameState gameState;
+
     private Color color;
 
-    public Empire() {
+    public Empire(GameState gameState) {
         name = EmpireNameGenerator.generateEmpireName();
         ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
                                 //CoopIso      AuthLib        LeftRight
@@ -28,25 +30,56 @@ public class Empire {
         enemies = new ArrayList<>();
         allies = new ArrayList<>();
         technology = Math.random();
+        this.gameState = gameState;
     }
 
     public void tick() {
         if(Math.random() < 0.01) {
             technology *= 1.1;
         }
-        if(maxSize > 0 && Math.random() > territory.size() / maxSize && territory.size() > 0) {
+        while(territory.contains(null)) {
+            territory.remove(null);
+        }
+        if(maxSize > 0 && Math.random() > territory.size() / maxSize && territory.size() > 10) {
             Pixel p = territory.get((int) (Math.random() * territory.size()));
-            p.revolt();
+            if(p == null) {
+                removeTerritory(null);
+            } else {
+                p.revolt();
+            }
         }
         if(territory.size() > maxSize) {
             maxSize = territory.size();
+        }
+        for(Empire e : allies) {
+            //System.out.println(name + " considers merging into " + e.getName());
+            if(ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random())) {
+                mergeInto(e);
+            }
         }
     }
 
     public void removeTerritory(Pixel pixel) {
         if(territory.contains(pixel)) {
+            if(pixel == null) {
+                territory.remove(null);
+                return;
+            }
+            if(pixel.getEmpire() == this) {
+                pixel.setEmpire(null);
+            }
             territory.remove(pixel);
         }
+    }
+
+    public void mergeInto(Empire e) {
+        System.out.println(name + " is merging into " + e.getName());
+        for(Pixel p : territory) {
+            if(p != null && p.getEmpire() == this) {
+                p.setEmpire(e);
+            }
+        }
+        territory.clear();
     }
 
     public void setTechnology(double technology) {
