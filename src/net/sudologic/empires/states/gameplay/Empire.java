@@ -1,5 +1,6 @@
 package net.sudologic.empires.states.gameplay;
 
+import net.sudologic.empires.Game;
 import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
 
 import java.awt.*;
@@ -26,7 +27,19 @@ public class Empire {
     public Empire(GameState gameState) {
         ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
                                 //CoopIso      AuthLib        LeftRight
-        name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2]);
+        name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], null);
+        color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
+        territory = new ArrayList<>();
+        enemies = new ArrayList<>();
+        allies = new ArrayList<>();
+        technology = Math.random();
+        this.gameState = gameState;
+    }
+
+    public Empire(GameState gameState, String oldName) {
+        ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
+        //CoopIso      AuthLib        LeftRight
+        this.name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], oldName);
         color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
         territory = new ArrayList<>();
         enemies = new ArrayList<>();
@@ -36,10 +49,13 @@ public class Empire {
     }
 
     public void tick() {
-        if(capital.getEmpire() != this && territory.size() > 0) {//capitulate!
-            Pixel p = territory.get((int) (Math.random() * territory.size()));
-            p.revolt();
+        if(territory.size() == 0) {
+            return;
+        }
+        if(capital.getEmpire() != this) {//capitulate!
             mergeInto(capital.getEmpire());
+            capital = null;
+            gameState.removeEmpire(this);
         }
         if(Math.random() < 0.01) {
             technology *= 1.1;
@@ -97,30 +113,19 @@ public class Empire {
     }
 
     public void mergeInto(Empire e) {
-        if(e.getTerritory().size() > territory.size()) {
-            System.out.println(name + " is merging into " + e.getName());
-            for(Pixel p : territory) {
-                if(p != null && p.getEmpire() == this) {
-                    p.setEmpire(e);
-                }
+        System.out.println(name + " is merging into " + e.getName());
+        for(Pixel p : territory) {
+            if(p != null && p.getEmpire() == this) {
+                p.setEmpire(e);
             }
-            territory.clear();
-        } else {
-            System.out.println(e.getName() + " is merging into " + name);
-            for(Pixel p : e.getTerritory()) {
-                if(p != null && p.getEmpire() == e) {
-                    p.setEmpire(this);
-                }
-            }
-            e.getTerritory().clear();
         }
+        territory.clear();
+        gameState.removeEmpire(this);
     }
 
     public void render(Graphics g) {
-        if(capital != null) {
-            g.setColor(Color.white);
-            g.drawString(name, (capital.getX() - name.length()) * gameState.getScale(), capital.getY() * gameState.getScale());
-        }
+        g.setColor(Color.white);
+        g.drawString(name, (capital.getX() - name.length()) * gameState.getScale(), capital.getY() * gameState.getScale());
     }
 
     public void setTechnology(double technology) {

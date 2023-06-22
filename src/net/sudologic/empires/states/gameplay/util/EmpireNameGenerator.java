@@ -10,7 +10,7 @@ public class EmpireNameGenerator {
     private static final String[] ISO_NAMES = {"Isolationist", "Solitary", "Secluded", "Reclusive", "Hermit", "Independent"};
     private static final String[] COOP_NAMES = {"Cooperative", "Allied", "United", "Collaborative", "Concordant", "Joint"};
 
-    private static final String[] GOVT_NAMES = {"Nation", "Realm", "Republic"};
+    private static final String[] GOVT_NAMES = {"Nation", "Realm", "Republic", "Country", "Territory", "Land"};
     private static final String[] PLACE_NAMES = {
             "France", "Germany", "Britain", "America", "Russia", "China", "Brazil", "India", "Canada",
             "Australia", "Japan", "Italy", "Spain", "Mexico", "Egypt", "South Africa", "Argentina", "Netherlands",
@@ -20,7 +20,7 @@ public class EmpireNameGenerator {
             "Hawaii"
     };
 
-    public static String generateEmpireName(int isoCoop, int authLib, int leftRight) {
+    public static String generateEmpireName(int isoCoop, int authLib, int leftRight, String placeName) {
         StringBuilder name = new StringBuilder();
 
         if (isoCoop < 96 || isoCoop > 160) {
@@ -56,24 +56,13 @@ public class EmpireNameGenerator {
             name.append(GOVT_NAMES[index]).append(" ");
         }
 
-        int placeIndex = new Random().nextInt(PLACE_NAMES.length);
-        if(name.length() > 0) {
+        if(placeName == null) {
+            int placeIndex = new Random().nextInt(PLACE_NAMES.length);
             name.append("of " + PLACE_NAMES[placeIndex]);
         } else {
-            name.append("of " + PLACE_NAMES[placeIndex]);
+            name.append("of " + placeName);
         }
 
-
         return name.toString().trim();
-    }
-
-    // Example usage
-    public static void main(String[] args) {
-        int isoCoop = 200;
-        int authLib = 120;
-        int leftRight = 128;
-
-        String empireName = generateEmpireName(isoCoop, authLib, leftRight);
-        System.out.println(empireName);
     }
 }

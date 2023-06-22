@@ -1,5 +1,7 @@
 package net.sudologic.empires.states.gameplay;
 
+import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,7 +38,7 @@ public class Pixel {
         //System.out.println("Revolt in " + empire.getName());
         empire.setTechnology(empire.getTechnology() / 5);
         empire.removeTerritory(this);
-        setEmpire(new Empire(gameState));
+        setEmpire(new Empire(gameState, old.getName()));
         gameState.addEmpire(empire);
         empire.addTerritory(this);
         strength = habitability * 20;

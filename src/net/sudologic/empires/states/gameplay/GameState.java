@@ -161,8 +161,7 @@ public class GameState extends State {
         for (Empire e : empires) {
             e.tick();
             if (e.getTerritory().size() == 0) {
-                dead.add(e);
-                System.out.println(e.getName() + " has been eliminated.");
+                removeEmpire(e);
             }
         }
         for (Empire e : dead) {
@@ -177,7 +176,7 @@ public class GameState extends State {
         Collections.shuffle(habitablePixels);
         for (Pixel p : habitablePixels) {
             p.tick();
-            if(boats.size() < maxBoats && Math.random() < 0.01) {
+            if(boats.size() < maxBoats && Math.random() < 0.1) {
                 p.spawnBoat();
             }
         }
@@ -196,6 +195,11 @@ public class GameState extends State {
 
     public int getScale() {
         return scale;
+    }
+
+    public void removeEmpire(Empire e) {
+        dead.add(e);
+        System.out.println(e.getName() + " has been eliminated.");
     }
 
     public ArrayList<Empire> getEmpires() {
