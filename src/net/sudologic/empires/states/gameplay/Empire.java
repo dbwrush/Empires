@@ -21,10 +21,12 @@ public class Empire {
 
     private Color color;
 
+    private Pixel capital;
+
     public Empire(GameState gameState) {
-        name = EmpireNameGenerator.generateEmpireName();
         ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
                                 //CoopIso      AuthLib        LeftRight
+        name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2]);
         color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
         territory = new ArrayList<>();
         enemies = new ArrayList<>();
@@ -34,6 +36,11 @@ public class Empire {
     }
 
     public void tick() {
+        if(capital.getEmpire() != this && territory.size() > 0) {//capitulate!
+            Pixel p = territory.get((int) (Math.random() * territory.size()));
+            p.revolt();
+            mergeInto(capital.getEmpire());
+        }
         if(Math.random() < 0.01) {
             technology *= 1.1;
         }
@@ -45,8 +52,17 @@ public class Empire {
             if(p == null) {
                 removeTerritory(null);
             } else {
-                p.revolt();
+                if(Math.random() < 0.1) {
+                    p.revolt();
+                } else if(Math.random() < 0.1) {
+                    for(Empire e : allies) {
+                        if(ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (6 * Math.random())) {
+                            mergeInto(e);
+                        }
+                    }
+                }
             }
+
         }
         if(territory.size() > maxSize) {
             maxSize = territory.size();
@@ -57,6 +73,14 @@ public class Empire {
                 mergeInto(e);
             }
         }
+    }
+
+    public Pixel getCapital() {
+        return capital;
+    }
+
+    public void setCapital(Pixel capital) {
+        this.capital = capital;
     }
 
     public void removeTerritory(Pixel pixel) {
@@ -73,13 +97,30 @@ public class Empire {
     }
 
     public void mergeInto(Empire e) {
-        System.out.println(name + " is merging into " + e.getName());
-        for(Pixel p : territory) {
-            if(p != null && p.getEmpire() == this) {
-                p.setEmpire(e);
+        if(e.getTerritory().size() > territory.size()) {
+            System.out.println(name + " is merging into " + e.getName());
+            for(Pixel p : territory) {
+                if(p != null && p.getEmpire() == this) {
+                    p.setEmpire(e);
+                }
             }
+            territory.clear();
+        } else {
+            System.out.println(e.getName() + " is merging into " + name);
+            for(Pixel p : e.getTerritory()) {
+                if(p != null && p.getEmpire() == e) {
+                    p.setEmpire(this);
+                }
+            }
+            e.getTerritory().clear();
         }
-        territory.clear();
+    }
+
+    public void render(Graphics g) {
+        if(capital != null) {
+            g.setColor(Color.white);
+            g.drawString(name, (capital.getX() - name.length()) * gameState.getScale(), capital.getY() * gameState.getScale());
+        }
     }
 
     public void setTechnology(double technology) {

@@ -39,9 +39,9 @@ public class Boat {
                 }
                 //System.out.println("Boat landed");
             } else if(empire.getEnemies().contains(target.getEmpire())) {
-                if(target.getStrength() < strength) {
+                if(target.getStrength() < strength || Math.random() < 0.3) {
                     //System.out.println("Boat captured territory for " + empire.getName());
-                    target.setStrength((float) (strength - target.getStrength()));
+                    target.setStrength((float) strength);
                     empire.addTerritory(target);
                 }
                 //System.out.println("Boat landed");

@@ -37,9 +37,11 @@ public class Pixel {
         empire.setTechnology(empire.getTechnology() / 5);
         empire.removeTerritory(this);
         setEmpire(new Empire(gameState));
+        gameState.addEmpire(empire);
         empire.addTerritory(this);
         strength = habitability * 20;
         empire.setEnemy(old);
+        empire.setCapital(this);
     }
 
     public void setEmpire(Empire empire) {
@@ -67,26 +69,32 @@ public class Pixel {
             borderFriction = 0;
             age += 0.5f;
             strength += habitability * empire.getTechnology();
-            if(strength > 255 * empire.getTechnology()) {
-                strength = (float) (255 * empire.getTechnology());
+            if(strength > 64 * empire.getTechnology()) {
+                strength = (float) (64 * empire.getTechnology());
+            }
+            if(strength > 255) {
+                strength = 255;
             }
             friendlyNeighbors = new ArrayList<>();
             float tneed = 1;
             if(neighbors == null) {
                 neighbors = gameState.getNeighbors(x, y);
             }
+            if(empire.getCapital() == this) {
+                tneed += 128;
+            }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
                     if (p.habitability < strength) {
                         if (p.empire == null) {
                             //System.out.println("Empire is null!");
-                            tneed = 40f;
+                            tneed += 40f;
                             empire.addTerritory(p);
                             strength -= p.habitability;
                         } else if (empire.getEnemies().contains(p.empire) && p.strength < strength) {
                             empire.addTerritory(p);
                             strength -= p.strength;
-                            tneed = 255f;
+                            tneed += 255f;
                             p.strength = strength / 2;
                             strength /= 2;
                         }
@@ -105,21 +113,21 @@ public class Pixel {
                                 empire.makePeace(p.empire);
                             }
                             if (!empire.getAllies().contains(p.empire)) {
-                                tneed = 20f;
+                                tneed += 20f;
                             } else {
-                                tneed = 10f;
+                                tneed += 10f;
                             }
                             borderFriction = (strength + p.strength) / 2;
                         }
                         if (empire.getEnemies().contains(p.empire)) {
-                            tneed = 255f;
+                            tneed += 255f;
                         }
                         if (p.empire == empire || empire.getAllies().contains(p.empire)) {
                             friendlyNeighbors.add(p);
                         }
                     }
                 } else {
-                    tneed = 10f;
+                    tneed += 10f;
                 }
             }
             float totalNeed = tneed;

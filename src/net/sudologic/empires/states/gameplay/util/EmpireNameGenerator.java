@@ -3,39 +3,77 @@ package net.sudologic.empires.states.gameplay.util;
 import java.util.Random;
 
 public class EmpireNameGenerator {
-    private static final String[] PREFIXES = { "United", "Republic", "Federal", "Democratic", "Kingdom", "People's" };
-    private static final String[] SUFFIXES = { "States", "Union", "Republic", "Kingdom", "Federation" };
-    private static final String[] ADJECTIVES = { "Great", "New", "Northern", "Southern", "Eastern", "Western" };
-    private static final String[] NOUNS = { "Land", "Island", "Nation", "Country", "Territory" };
+    private static final String[] LEFT_NAMES = {"Socialist", "Soviet", "People's", "Democratic", "Workers'", "Communist", "Collective"};
+    private static final String[] RIGHT_NAMES = {"Capitalist", "Free", "Liberal", "Market", "Democratic", "Individual"};
+    private static final String[] AUTH_NAMES = {"Empire", "Dominion", "State", "Union", "Federation", "Kingdom"};
+    private static final String[] LIB_NAMES = {"Republic", "Commonwealth", "Alliance", "Federation", "League", "Union"};
+    private static final String[] ISO_NAMES = {"Isolationist", "Solitary", "Secluded", "Reclusive", "Hermit", "Independent"};
+    private static final String[] COOP_NAMES = {"Cooperative", "Allied", "United", "Collaborative", "Concordant", "Joint"};
 
-    private static final Random random = new Random();
+    private static final String[] GOVT_NAMES = {"Nation", "Realm", "Republic"};
+    private static final String[] PLACE_NAMES = {
+            "France", "Germany", "Britain", "America", "Russia", "China", "Brazil", "India", "Canada",
+            "Australia", "Japan", "Italy", "Spain", "Mexico", "Egypt", "South Africa", "Argentina", "Netherlands",
+            "Sweden", "Greece", "Turkey", "Thailand", "New Zealand", "Chile", "Iceland", "Austria", "Kenya", "Indonesia",
+            "Denmark", "England", "Scotland", "Wales", "Ireland", "Norway", "Finland", "Belgium", "Portugal", "Singapore", "Korea",
+            "Czech Republic", "Israel", "Switzerland", "Colombia", "Peru", "Cuba", "Ukraine", "Vietnam", "Jamaica",
+            "Hawaii"
+    };
 
-    public static String generateEmpireName() {
-        StringBuilder empireName = new StringBuilder();
+    public static String generateEmpireName(int isoCoop, int authLib, int leftRight) {
+        StringBuilder name = new StringBuilder();
 
-        // Add prefix (optional)
-        if (random.nextBoolean()) {
-            empireName.append(getRandomElement(PREFIXES)).append(" ");
+        if (isoCoop < 96 || isoCoop > 160) {
+            if (isoCoop < 96) {
+                int index = new Random().nextInt(ISO_NAMES.length);
+                name.append(ISO_NAMES[index]).append(" ");
+            } else {
+                int index = new Random().nextInt(COOP_NAMES.length);
+                name.append(COOP_NAMES[index]).append(" ");
+            }
         }
 
-        // Add adjective (optional)
-        if (random.nextBoolean()) {
-            empireName.append(getRandomElement(ADJECTIVES)).append(" ");
+        if (leftRight < 96 || leftRight > 160) {
+            if (leftRight < 96) {
+                int index = new Random().nextInt(LEFT_NAMES.length);
+                name.append(LEFT_NAMES[index]).append(" ");
+            } else {
+                int index = new Random().nextInt(RIGHT_NAMES.length);
+                name.append(RIGHT_NAMES[index]).append(" ");
+            }
         }
 
-        // Add noun
-        empireName.append(getRandomElement(NOUNS));
-
-        // Add suffix (optional)
-        if (random.nextBoolean()) {
-            empireName.append(" ").append(getRandomElement(SUFFIXES));
+        if (authLib < 96 || authLib > 160) {
+            if (authLib < 96) {
+                int index = new Random().nextInt(AUTH_NAMES.length);
+                name.append(AUTH_NAMES[index]).append(" ");
+            } else {
+                int index = new Random().nextInt(LIB_NAMES.length);
+                name.append(LIB_NAMES[index]).append(" ");
+            }
+        } else {
+            int index = new Random().nextInt(GOVT_NAMES.length);
+            name.append(GOVT_NAMES[index]).append(" ");
         }
 
-        return empireName.toString();
+        int placeIndex = new Random().nextInt(PLACE_NAMES.length);
+        if(name.length() > 0) {
+            name.append("of " + PLACE_NAMES[placeIndex]);
+        } else {
+            name.append("of " + PLACE_NAMES[placeIndex]);
+        }
+
+
+        return name.toString().trim();
     }
 
-    private static String getRandomElement(String[] array) {
-        int index = random.nextInt(array.length);
-        return array[index];
+    // Example usage
+    public static void main(String[] args) {
+        int isoCoop = 200;
+        int authLib = 120;
+        int leftRight = 128;
+
+        String empireName = generateEmpireName(isoCoop, authLib, leftRight);
+        System.out.println(empireName);
     }
 }

@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GameState extends State {
-    private ArrayList<Empire> empires, dead;
+    private ArrayList<Empire> empires, dead, revolts;
 
     private ArrayList<Pixel> habitablePixels;
 
@@ -42,6 +42,7 @@ public class GameState extends State {
         remBoats = new ArrayList<>();
         colorMode = Pixel.ColorMode.empire;
         this.maxBoats = maxBoats;
+        revolts = new ArrayList<>();
     }
 
     private void genTerrain(int width, int height, int scale) {
@@ -77,16 +78,19 @@ public class GameState extends State {
         while(empires.size() <= numEmpires) {
             Empire e = new Empire(this);
             System.out.println("Spawning " + e.getName());
-            boolean hasCapital = false;
-            while(!hasCapital) {
+            while(e.getCapital() == null) {
                 Pixel p = pixels[(int) (Math.random() * pixels.length)][(int) (Math.random() * pixels[0].length)];
                 if(p.getEmpire() == null && p.isHabitable()) {
                     e.addTerritory(p);
-                    hasCapital = true;
+                    e.setCapital(p);
                 }
             }
             empires.add(e);
         }
+    }
+
+    public void addEmpire(Empire empire) {
+        revolts.add(empire);
     }
 
     public double getWarThreshold() {
@@ -165,6 +169,10 @@ public class GameState extends State {
             empires.remove(e);
         }
         dead = new ArrayList<>();
+        for(Empire e : revolts) {
+            empires.add(e);
+        }
+        revolts = new ArrayList<>();
 
         Collections.shuffle(habitablePixels);
         for (Pixel p : habitablePixels) {
@@ -186,6 +194,10 @@ public class GameState extends State {
         remBoats = new ArrayList<>();
     }
 
+    public int getScale() {
+        return scale;
+    }
+
     public ArrayList<Empire> getEmpires() {
         return empires;
     }
@@ -203,6 +215,9 @@ public class GameState extends State {
         }
         for(Boat b : boats) {
             b.render(g, scale);
+        }
+        for(Empire e : empires) {
+            e.render(g);
         }
     }
 
