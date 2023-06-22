@@ -39,7 +39,8 @@ public class Empire {
     public Empire(GameState gameState, String oldName) {
         ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
         //CoopIso      AuthLib        LeftRight
-        this.name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], oldName);
+        String[] p = oldName.split(" ");
+        this.name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], p[p.length - 1]);
         color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
         territory = new ArrayList<>();
         enemies = new ArrayList<>();
