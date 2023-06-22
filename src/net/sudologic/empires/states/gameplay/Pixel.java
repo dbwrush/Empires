@@ -78,12 +78,12 @@ public class Pixel {
                 strength = 255;
             }
             friendlyNeighbors = new ArrayList<>();
-            float tneed = 1;
+            float tneed = 0;
             if(neighbors == null) {
                 neighbors = gameState.getNeighbors(x, y);
             }
             if(empire.getCapital() == this) {
-                tneed += 128;
+                tneed += 255;
             }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
@@ -103,6 +103,7 @@ public class Pixel {
                     }
                     if (p.empire != null) {
                         if (p.empire != empire) {
+                            borderFriction += (strength + p.strength) / 2;
                             float ideoDiff = (float) empire.ideoDifference(p.empire);
                             float coopIso = (float) ((empire.getCoopIso() + p.empire.getCoopIso()) / 4);
                             if (ideoDiff < coopIso) {
@@ -119,7 +120,6 @@ public class Pixel {
                             } else {
                                 tneed += 10f;
                             }
-                            borderFriction = (strength + p.strength) / 2;
                         }
                         if (empire.getEnemies().contains(p.empire)) {
                             tneed += 255f;
@@ -156,7 +156,7 @@ public class Pixel {
             return;
         }
         for (Pixel p : neighbors) {
-            if (!p.isHabitable() && gameState.addBoat(new Boat(empire, strength, p.getX(), p.getY(), gameState))) {
+            if (!p.isHabitable() && gameState.addBoat(new Boat(empire, strength, p.getX(), p.getY(), gameState, Math.random() * 8))) {
                 strength = 0;
                 return;
             }

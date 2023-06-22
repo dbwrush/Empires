@@ -13,10 +13,10 @@ public class EmpireNameGenerator {
     private static final String[] GOVT_NAMES = {"Nation", "Realm", "Republic", "Country", "Territory", "Land"};
     private static final String[] PLACE_NAMES = {
             "France", "Germany", "Britain", "America", "Russia", "China", "Brazil", "India", "Canada",
-            "Australia", "Japan", "Italy", "Spain", "Mexico", "Egypt", "South Africa", "Argentina", "Netherlands",
+            "Australia", "Japan", "Italy", "Spain", "Mexico", "Egypt", "Argentina", "Netherlands",
             "Sweden", "Greece", "Turkey", "Thailand", "New Zealand", "Chile", "Iceland", "Austria", "Kenya", "Indonesia",
             "Denmark", "England", "Scotland", "Wales", "Ireland", "Norway", "Finland", "Belgium", "Portugal", "Singapore", "Korea",
-            "Czech Republic", "Israel", "Switzerland", "Colombia", "Peru", "Cuba", "Ukraine", "Vietnam", "Jamaica",
+            "Czechia", "Israel", "Switzerland", "Colombia", "Peru", "Cuba", "Ukraine", "Vietnam", "Jamaica",
             "Hawaii"
     };
 

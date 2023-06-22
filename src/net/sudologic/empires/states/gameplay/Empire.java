@@ -55,8 +55,8 @@ public class Empire {
         }
         if(capital.getEmpire() != this) {//capitulate!
             mergeInto(capital.getEmpire());
-            capital = null;
             gameState.removeEmpire(this);
+            territory.clear();
         }
         if(Math.random() < 0.01) {
             technology *= 1.1;
@@ -126,7 +126,24 @@ public class Empire {
 
     public void render(Graphics g) {
         g.setColor(Color.white);
-        g.drawString(name, (capital.getX() - name.length()) * gameState.getScale(), capital.getY() * gameState.getScale());
+        int x = capital.getX() - name.length();
+        if(x < 0) {
+            x = 0;
+        }
+        if(x > gameState.getWidth() - name.length() * 2) {
+            x = gameState.getWidth() - name.length() * 2;
+        }
+        int y = capital.getY();
+        if(y < 20) {
+            y = 20;
+        }
+        if(y > gameState.getHeight() - 20) {
+            y = gameState.getHeight() - 20;
+        }
+        if(name == null) {
+            System.out.println("huh?");
+        }
+        g.drawString(name, x * gameState.getScale(), y * gameState.getScale());
     }
 
     public void setTechnology(double technology) {
