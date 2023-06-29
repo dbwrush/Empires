@@ -36,13 +36,12 @@ public class Pixel {
     public void revolt() {
         Empire old = empire;
         //System.out.println("Revolt in " + empire.getName());
-        empire.setTechnology(empire.getTechnology() / 5);
         empire.removeTerritory(this);
         setEmpire(new Empire(gameState, old.getName()));
         gameState.addEmpire(empire);
         empire.addTerritory(this);
         strength = habitability * 20;
-        empire.setEnemy(old);
+        empire.setEnemy(old, false);
         empire.setCapital(this);
     }
 
@@ -68,11 +67,17 @@ public class Pixel {
 
     public void tick() {
         if (empire != null) {
+            if(!gameState.getEmpires().contains(empire)) {
+                empire = null;
+                strength = 0;
+                need = 0;
+                return;
+            }
             borderFriction = 0;
             age += 0.5f;
-            strength += habitability * empire.getTechnology();
-            if(strength > 64 * empire.getTechnology()) {
-                strength = (float) (64 * empire.getTechnology());
+            strength += habitability * Math.random();
+            if(strength < 0) {
+                strength = 0;
             }
             if(strength > 255) {
                 strength = 255;
@@ -83,7 +88,7 @@ public class Pixel {
                 neighbors = gameState.getNeighbors(x, y);
             }
             if(empire.getCapital() == this) {
-                tneed += 255;
+                tneed += 50;
             }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
@@ -109,16 +114,16 @@ public class Pixel {
                             if (ideoDiff < coopIso) {
                                 empire.setAlly(p.empire);
                             }
-                            if (borderFriction > gameState.getWarThreshold() && coopIso < ideoDiff && !empire.getEnemies().contains(p.empire)) {
-                                empire.setEnemy(p.empire);
+                            if (borderFriction > gameState.getWarThreshold() && coopIso < ideoDiff * 0.33f * Math.random() && !empire.getEnemies().contains(p.empire)) {
+                                empire.setEnemy(p.empire, true);
                             }
                             if (empire.getEnemies().contains(p.empire) && ((ideoDiff + (borderFriction / 5)) * 2 < gameState.getWarThreshold())) {
                                 empire.makePeace(p.empire);
                             }
                             if (!empire.getAllies().contains(p.empire)) {
-                                tneed += 20f;
-                            } else {
                                 tneed += 10f;
+                            } else {
+                                tneed += 4f;
                             }
                         }
                         if (empire.getEnemies().contains(p.empire)) {
@@ -129,12 +134,16 @@ public class Pixel {
                         }
                     }
                 } else {
-                    tneed += 10f;
+                    tneed += 2f;
                 }
             }
             float totalNeed = tneed;
+            float maxNeed = 0;
             for (Pixel p : friendlyNeighbors) {
                 totalNeed += p.need;
+                if(p.need > maxNeed) {
+                    maxNeed = p.need;
+                }
             }
             if (!friendlyNeighbors.isEmpty()) {
                 float factor = strength / totalNeed;
@@ -143,10 +152,11 @@ public class Pixel {
                 }
                 strength *= tneed / totalNeed;
             }
-            float avgNeed = totalNeed / (friendlyNeighbors.size() + 1) * 0.999f;
-            need = tneed;
-            if (avgNeed > tneed) {
-                need = avgNeed;
+            
+            if(tneed < maxNeed * 0.9) {
+                need = maxNeed * 0.9f;
+            } else {
+                need = tneed;
             }
         }
     }

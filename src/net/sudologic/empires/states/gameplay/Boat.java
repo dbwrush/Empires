@@ -21,7 +21,6 @@ public class Boat {
     }
 
     public void tick() {
-        strength *= 0.999;
         if(empire.getTerritory().size() == 0) {
             gs.removeBoat(this);
         }
@@ -66,7 +65,7 @@ public class Boat {
                     if (ideoDiff < coopIso) {
                         empire.setAlly(target.getEmpire());
                     } else if(borderFriction > gs.getWarThreshold() && coopIso < ideoDiff && !empire.getEnemies().contains(target.getEmpire())) {
-                        empire.setEnemy(target.getEmpire());
+                        empire.setEnemy(target.getEmpire(), true);
                     } else if(empire.getEnemies().contains(target.getEmpire()) && ((ideoDiff + (borderFriction / 5)) * 2 < gs.getWarThreshold())) {
                         empire.makePeace(target.getEmpire());
                     }

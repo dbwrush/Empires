@@ -49,7 +49,7 @@ public class GameState extends State {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
         habitablePixels = new ArrayList<>();
-        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.005f, 4);
+        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.003f, 4);
         float[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
             for(int y = 0; y < pixels[0].length; y++) {
@@ -162,6 +162,8 @@ public class GameState extends State {
             e.tick();
             if (e.getTerritory().size() == 0) {
                 removeEmpire(e);
+            } else {
+                Collections.shuffle(e.getTerritory());
             }
         }
         for (Empire e : dead) {
@@ -192,14 +194,15 @@ public class GameState extends State {
         }
         remBoats = new ArrayList<>();
     }
-
     public int getScale() {
         return scale;
     }
 
     public void removeEmpire(Empire e) {
-        dead.add(e);
-        System.out.println(e.getName() + " has been eliminated.");
+        if(!dead.contains(e)) {
+            dead.add(e);
+        }
+        //System.out.println(e.getName() + " has been eliminated.");
     }
 
     public int getWidth() {

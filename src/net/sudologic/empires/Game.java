@@ -103,6 +103,13 @@ public class Game implements Runnable{
 
     public void tick() {
         State.getCurrentState().tick();
+        if(State.getCurrentState() instanceof GameState) {
+            GameState gs = (GameState) State.getCurrentState();
+            if(gs.getEmpires().size() == 1) {
+                running = false;
+                System.out.println(gs.getEmpires().get(0).getName() + " has won the game.");
+            }
+        }
     }
 
     public void render() {
