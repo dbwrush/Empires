@@ -36,7 +36,7 @@ public class Pixel {
 
     public Empire revolt() {
         Empire old = empire;
-        //System.out.println("Revolt in " + empire.getName());
+
         empire.removeTerritory(this);
         empire = new Empire(gameState, old.getName());
         gameState.addEmpire(empire);
@@ -45,6 +45,7 @@ public class Pixel {
         empire.setEnemy(old, true);
         old.setEnemy(empire, true);
         empire.setCapital(this);
+        System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
         return empire;
     }
 
@@ -183,6 +184,13 @@ public class Pixel {
                 return;
             }
         }
+    }
+
+    public void spawnMissile() {
+        if(empire == null) {
+            return;
+        }
+        gameState.addMissile(new Missile(empire, strength * 2, x, y, gameState));
     }
 
     public ArrayList<Pixel> getNeighbors() {

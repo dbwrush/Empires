@@ -181,7 +181,7 @@ public class Empire {
             setEnemy(e, false);
         }
         if(!enemies.contains(e)) {
-            //System.out.println(name + " is now an enemy of " + e.getName());
+            System.out.println(name + " is now an enemy of " + e.getName());
             enemies.add(e);
             e.setEnemy(this, true);
             if(recur) {
@@ -196,7 +196,7 @@ public class Empire {
         if(enemies.contains(e)) {
             enemies.remove(e);
             e.enemies.remove(this);
-            //System.out.println(name + " made peace with " + e.getName());
+            System.out.println(name + " made peace with " + e.getName());
         }
     }
 

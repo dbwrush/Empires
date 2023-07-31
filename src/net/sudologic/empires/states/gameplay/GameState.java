@@ -20,6 +20,8 @@ public class GameState extends State {
 
     private ArrayList<Boat> boats, remBoats;
 
+    private ArrayList<Missile> missiles, remMissiles;
+
     private Pixel[][] pixels;
 
     private int scale;
@@ -44,6 +46,8 @@ public class GameState extends State {
         genEmpires(numEmpires);
         boats = new ArrayList<>();
         remBoats = new ArrayList<>();
+        missiles = new ArrayList<>();
+        remMissiles = new ArrayList<>();
         colorMode = Pixel.ColorMode.empire;
         revolts = new ArrayList<>();
     }
@@ -103,6 +107,10 @@ public class GameState extends State {
         remBoats.add(b);
     }
 
+    public void removeMissile(Missile m) {
+        remMissiles.add(m);
+    }
+
     public ArrayList<Pixel> getNeighbors(int x, int y) {
         ArrayList<Pixel> neighbors = new ArrayList<>();
 
@@ -116,19 +124,18 @@ public class GameState extends State {
             rightOne = 0;
         }
 
-        neighbors.add(pixels[leftOne][y]);
-        neighbors.add(pixels[rightOne][y]);
-
         if(y > 0) {
             neighbors.add(pixels[leftOne][y - 1]);
             neighbors.add(pixels[x][y - 1]);
             neighbors.add(pixels[rightOne][y - 1]);
         }
+        neighbors.add(pixels[rightOne][y]);
         if(y < pixels[0].length - 1) {
-            neighbors.add(pixels[leftOne][y + 1]);
-            neighbors.add(pixels[x][y + 1]);
             neighbors.add(pixels[rightOne][y + 1]);
+            neighbors.add(pixels[x][y + 1]);
+            neighbors.add(pixels[leftOne][y + 1]);
         }
+        neighbors.add(pixels[leftOne][y]);
 
         /*
         if(x > 0 && y > 0) {
@@ -211,6 +218,9 @@ public class GameState extends State {
             if(Math.random() < 0.001) {
                 p.spawnBoat();
             }
+            if(Math.random() < 0.1) {
+                p.spawnMissile();
+            }
         }
 
         for (Boat b : boats) {
@@ -223,6 +233,17 @@ public class GameState extends State {
             }
         }
         remBoats = new ArrayList<>();
+
+        for (Missile m : missiles) {
+            m.tick();
+        }
+
+        for(Missile m : remMissiles) {
+            if(missiles.contains(m)) {
+                missiles.remove(m);
+            }
+        }
+        remMissiles = new ArrayList<>();
     }
     public int getScale() {
         return scale;
@@ -269,9 +290,16 @@ public class GameState extends State {
         for(Empire e : empires) {
             e.render(g);
         }
+        for(Missile m : missiles) {
+            m.render(g, scale);
+        }
     }
 
     public void addBoat(Boat boat) {
         boats.add(boat);
+    }
+
+    public void addMissile(Missile missile) {
+        missiles.add(missile);
     }
 }
