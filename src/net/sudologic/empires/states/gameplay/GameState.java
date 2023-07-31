@@ -22,7 +22,7 @@ public class GameState extends State {
 
     private Pixel[][] pixels;
 
-    private int maxBoats, scale;
+    private int scale;
 
     private double warThreshold;
 
@@ -30,25 +30,27 @@ public class GameState extends State {
 
     private KeyManager km;
 
-    public GameState(Game game, int width, int height, int scale, int numEmpires, double warThreshold, int maxBoats, KeyManager km) {
+    public GameState(Game game, int width, int height, int scale, int numEmpires, double warThreshold, KeyManager km) {
         super(game);
         System.out.println("Switched to GameState");
         this.km = km;
         this.warThreshold = warThreshold;
         this.scale = scale;
-        genTerrain(width / scale, height / scale, scale);
+        habitablePixels = new ArrayList<>();
+        while(habitablePixels.size() < ((width / scale) * (height / scale)) / 2) {
+            habitablePixels = new ArrayList<>();
+            genTerrain(width / scale, height / scale, scale);
+        }
         genEmpires(numEmpires);
         boats = new ArrayList<>();
         remBoats = new ArrayList<>();
         colorMode = Pixel.ColorMode.empire;
-        this.maxBoats = maxBoats;
         revolts = new ArrayList<>();
     }
 
     private void genTerrain(int width, int height, int scale) {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
-        habitablePixels = new ArrayList<>();
         PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.003f, 4);
         float[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
@@ -104,6 +106,31 @@ public class GameState extends State {
     public ArrayList<Pixel> getNeighbors(int x, int y) {
         ArrayList<Pixel> neighbors = new ArrayList<>();
 
+        int leftOne = x - 1;
+        int rightOne = x + 1;
+
+        if(leftOne < 0) {
+            leftOne = pixels.length - 1;
+        }
+        if(rightOne > pixels.length - 1) {
+            rightOne = 0;
+        }
+
+        neighbors.add(pixels[leftOne][y]);
+        neighbors.add(pixels[rightOne][y]);
+
+        if(y > 0) {
+            neighbors.add(pixels[leftOne][y - 1]);
+            neighbors.add(pixels[x][y - 1]);
+            neighbors.add(pixels[rightOne][y - 1]);
+        }
+        if(y < pixels[0].length - 1) {
+            neighbors.add(pixels[leftOne][y + 1]);
+            neighbors.add(pixels[x][y + 1]);
+            neighbors.add(pixels[rightOne][y + 1]);
+        }
+
+        /*
         if(x > 0 && y > 0) {
             neighbors.add(pixels[x - 1][y - 1]);
         }
@@ -127,7 +154,7 @@ public class GameState extends State {
         }
         if(x < pixels.length - 1 && y < pixels[0].length - 1) {
             neighbors.add(pixels[x + 1][y + 1]);
-        }
+        }*/
 
         return neighbors;
     }
@@ -156,6 +183,9 @@ public class GameState extends State {
         if (km.isKeyPressed(KeyEvent.VK_6)) {
             colorMode = Pixel.ColorMode.friction;
         }
+        if (km.isKeyPressed(KeyEvent.VK_7)) {
+            colorMode = Pixel.ColorMode.alliance;
+        }
 
         Collections.shuffle(empires);
         for (Empire e : empires) {
@@ -178,7 +208,7 @@ public class GameState extends State {
         Collections.shuffle(habitablePixels);
         for (Pixel p : habitablePixels) {
             p.tick();
-            if(boats.size() < maxBoats && Math.random() < 0.01) {
+            if(Math.random() < 0.001) {
                 p.spawnBoat();
             }
         }
@@ -199,7 +229,12 @@ public class GameState extends State {
     }
 
     public void removeEmpire(Empire e) {
-        if(!dead.contains(e)) {
+        for(Pixel p : habitablePixels) {
+            if(p.getEmpire() == e) {
+                e.addTerritory(p);
+            }
+        }
+        if(e.getTerritory().size() == 0 || !dead.contains(e)) {
             dead.add(e);
         }
         //System.out.println(e.getName() + " has been eliminated.");
@@ -236,11 +271,7 @@ public class GameState extends State {
         }
     }
 
-    public boolean addBoat(Boat boat) {
-        if(boats.size() < maxBoats) {
-            boats.add(boat);
-            return true;
-        }
-        return false;
+    public void addBoat(Boat boat) {
+        boats.add(boat);
     }
 }

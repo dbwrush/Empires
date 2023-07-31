@@ -13,7 +13,7 @@ public class Boat {
     public Boat(Empire empire, double strength, int x, int y, GameState gs, double direction) {
         //System.out.println(empire.getName() + " launched a boat!");
         this.empire = empire;
-        this.strength = strength;
+        this.strength = strength * 5;
         this.x = x;
         this.y = y;
         this.gs = gs;
@@ -21,12 +21,13 @@ public class Boat {
     }
 
     public void tick() {
+        //System.out.println("Ticking boat!");
         if(empire.getTerritory().size() == 0) {
             gs.removeBoat(this);
         }
 
         ArrayList<Pixel> neighbors = gs.getNeighbors(x, y);
-        int t = (int) (direction + (2 * Math.random() - 1));
+        int t = (int) (direction + (Math.random() - 0.5));
         if(t > neighbors.size() - 1) {
             t = neighbors.size() - 1;
         }
@@ -54,6 +55,11 @@ public class Boat {
                     //System.out.println("Boat captured territory for " + empire.getName());
                     target.setStrength((float) strength);
                     empire.addTerritory(target);
+                    for(Pixel p : target.getNeighbors()) {
+                        if(empire.getEnemies().contains(p.getEmpire())) {
+                            empire.addTerritory(p);
+                        }
+                    }
                 }
                 //System.out.println("Boat landed");
                 empire.addTerritory(target);
@@ -62,7 +68,7 @@ public class Boat {
                     float ideoDiff = (float) empire.ideoDifference(target.getEmpire());
                     float coopIso = (float) ((empire.getCoopIso() + target.getEmpire().getCoopIso()) / 4);
                     float borderFriction = (float) ((strength + target.getStrength()) / 2);
-                    if (ideoDiff < coopIso) {
+                    if (ideoDiff < coopIso * Empire.getAllianceDifficulty()) {
                         empire.setAlly(target.getEmpire());
                     } else if(borderFriction > gs.getWarThreshold() && coopIso < ideoDiff && !empire.getEnemies().contains(target.getEmpire())) {
                         empire.setEnemy(target.getEmpire(), true);
@@ -74,13 +80,14 @@ public class Boat {
             }
             gs.removeBoat(this);
         }
-        if(strength <= 10) {
+        if(strength < 1) {
             //System.out.println("Boat died");
             gs.removeBoat(this);
         }
     }
 
     public void render(Graphics g, int scale) {
+        //System.out.println("Rendered boat!");
         g.setColor(empire.getColor());
         g.fillRect(x * scale, y * scale, scale, scale);
     }

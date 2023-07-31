@@ -10,7 +10,7 @@ import java.awt.image.BufferStrategy;
 
 public class Game implements Runnable{
     private final double warThreshold;
-    private int width, height, numEmpires, maxBoats, scale;
+    private int width, height, numEmpires, scale;
     private String title;
 
     private KeyManager keyManager;
@@ -28,13 +28,12 @@ public class Game implements Runnable{
     private BufferStrategy bs;
     private Graphics g;
 
-    public Game(String title, int width, int height, int scale, int numEmpires, double warThreshold, int maxBoats) {
+    public Game(String title, int width, int height, int scale, int numEmpires, double warThreshold) {
         this.width = width;
         this.height = height;
         this.title = title;
         this.numEmpires = numEmpires;
         this.warThreshold = warThreshold;
-        this.maxBoats = maxBoats;
         this.scale = scale;
         keyManager = new KeyManager();
         fileManager = new FileManager();
@@ -43,7 +42,7 @@ public class Game implements Runnable{
     private void init() {
         display = new Display(title, width, height);
         display.getFrame().addKeyListener(keyManager);
-        gameState = new GameState(this, width, height, scale, numEmpires, warThreshold, maxBoats, keyManager);
+        gameState = new GameState(this, width, height, scale, numEmpires, warThreshold,  keyManager);
         State.setCurrentState(gameState);
     }
 

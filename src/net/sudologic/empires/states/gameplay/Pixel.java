@@ -14,11 +14,12 @@ public class Pixel {
         ideology,
         need,
         age,
-        friction
+        friction,
+        alliance
     }
 
     private int x, y, scale;
-    private static int maxAge = 255;
+    private static int maxAge = 2048;
     private float strength, borderFriction, habitability, need, age;
     private Empire empire;
     private GameState gameState;
@@ -33,16 +34,18 @@ public class Pixel {
         this.need = 0;
     }
 
-    public void revolt() {
+    public Empire revolt() {
         Empire old = empire;
         //System.out.println("Revolt in " + empire.getName());
         empire.removeTerritory(this);
-        setEmpire(new Empire(gameState, old.getName()));
+        empire = new Empire(gameState, old.getName());
         gameState.addEmpire(empire);
         empire.addTerritory(this);
         strength = habitability * 20;
-        empire.setEnemy(old, false);
+        empire.setEnemy(old, true);
+        old.setEnemy(empire, true);
         empire.setCapital(this);
+        return empire;
     }
 
     public void setEmpire(Empire empire) {
@@ -68,9 +71,13 @@ public class Pixel {
     public void tick() {
         if (empire != null) {
             if(!gameState.getEmpires().contains(empire)) {
-                empire = null;
-                strength = 0;
-                need = 0;
+                if(Math.random() < 0.01) {
+                    Empire old = empire;
+                    old.setEnemy(revolt(), true);
+                } else {
+                    empire.removeTerritory(this);
+                    empire = null;
+                }
                 return;
             }
             borderFriction = 0;
@@ -88,7 +95,7 @@ public class Pixel {
                 neighbors = gameState.getNeighbors(x, y);
             }
             if(empire.getCapital() == this) {
-                tneed += 50;
+                tneed += 4;
             }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
@@ -101,17 +108,20 @@ public class Pixel {
                         } else if (empire.getEnemies().contains(p.empire) && p.strength < strength) {
                             empire.addTerritory(p);
                             strength -= p.strength;
-                            tneed += 255f;
                             p.strength = strength / 2;
                             strength /= 2;
                         }
                     }
                     if (p.empire != null) {
                         if (p.empire != empire) {
-                            borderFriction += (strength + p.strength) / 2;
+                            if(empire.getAllies().contains(p.empire)) {
+                                borderFriction += (strength + p.strength) / 5;
+                            } else {
+                                borderFriction += (strength + p.strength) / 2;
+                            }
                             float ideoDiff = (float) empire.ideoDifference(p.empire);
                             float coopIso = (float) ((empire.getCoopIso() + p.empire.getCoopIso()) / 4);
-                            if (ideoDiff < coopIso) {
+                            if (ideoDiff < coopIso * Empire.getAllianceDifficulty()) {
                                 empire.setAlly(p.empire);
                             }
                             if (borderFriction > gameState.getWarThreshold() && coopIso < ideoDiff * 0.33f * Math.random() && !empire.getEnemies().contains(p.empire)) {
@@ -123,7 +133,7 @@ public class Pixel {
                             if (!empire.getAllies().contains(p.empire)) {
                                 tneed += 10f;
                             } else {
-                                tneed += 4f;
+                                tneed += 1f;
                             }
                         }
                         if (empire.getEnemies().contains(p.empire)) {
@@ -134,7 +144,7 @@ public class Pixel {
                         }
                     }
                 } else {
-                    tneed += 2f;
+                    tneed += 1f;
                 }
             }
             float totalNeed = tneed;
@@ -166,11 +176,17 @@ public class Pixel {
             return;
         }
         for (Pixel p : neighbors) {
-            if (!p.isHabitable() && gameState.addBoat(new Boat(empire, strength, p.getX(), p.getY(), gameState, Math.random() * 8))) {
-                strength = 0;
+            if (!p.isHabitable()) {
+                gameState.addBoat(new Boat(empire, strength / 2, p.getX(), p.getY(), gameState, Math.random() * 8));
+                strength = strength / 2;
+                //System.out.println("Successfully spawned boat");
                 return;
             }
         }
+    }
+
+    public ArrayList<Pixel> getNeighbors() {
+        return neighbors;
     }
 
     public void setStrength(float strength) {
@@ -194,6 +210,9 @@ public class Pixel {
     }
 
     public Color getColor(ColorMode colorMode) {
+        if(empire != null && empire.getCapital() == this) {
+            return empire.getColor();
+        }
         switch (colorMode) {
             case empire:
                 if (empire != null) {
@@ -225,8 +244,8 @@ public class Pixel {
             case age:
                 if(empire != null) {
                     int a = (int) age;
-                    if(a > 255) {
-                        a = 255;
+                    if(a > maxAge) {
+                        a = maxAge;
                     }
                     float hue = (float) a / maxAge * 120;  // 120 degrees covers the range from red to green
                     float saturation = 1.0f;
@@ -244,6 +263,18 @@ public class Pixel {
                         f = 0;
                     }
                     return new Color(f, 0, 0);
+                }
+            case alliance:
+                if(empire != null) {
+                    float g = 0;
+                    if(friendlyNeighbors != null) {
+                        g = friendlyNeighbors.size();
+                    }
+                    float r = 8 - g;
+                    g = (g/8);
+                    r = (r/8);
+
+                    return new Color(r, g, 0);
                 }
             default:
                 if (habitability == 0) {
