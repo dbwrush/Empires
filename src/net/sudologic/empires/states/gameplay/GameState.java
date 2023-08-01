@@ -216,7 +216,7 @@ public class GameState extends State {
             if(Math.random() < 0.001) {
                 p.spawnBoat();
             }
-            if(Math.random() < 0.001) {
+            if(Math.random() < 0.0001) {
                 p.spawnMissile();
             }
         }

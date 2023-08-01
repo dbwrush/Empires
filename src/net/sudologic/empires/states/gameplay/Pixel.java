@@ -86,10 +86,17 @@ public class Pixel {
             }
             borderFriction = 0;
             age += 0.5f;
-            strength += habitability * Math.random();
             if(strength < 0) {
-                strength = 0;
+                if(Math.random() < 0.5) {
+                    revolt();
+                } else {
+                    empire.removeTerritory(this);
+                    empire = null;
+                    strength = 0;
+                }
+                return;
             }
+            strength += habitability * Math.random();
             if(strength > 255) {
                 strength = 255;
             }
