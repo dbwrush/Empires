@@ -8,7 +8,6 @@ public class Missile {
     private double xRate, yRate, dist;
     private Pixel target;
     private double x, y;
-
     private GameState gs;
 
     public Missile(Empire empire, double range, int x, int y, GameState gs) {
@@ -29,18 +28,24 @@ public class Missile {
             return;
         }
 
+        pickTarget(enemy);
+
+        for(int i = 0; i < 5; i++) {
+            if(dist > range) {
+                pickTarget(enemy);
+            } else {
+                break;
+            }
+        }
+    }
+
+    public void pickTarget(Empire enemy) {
         target = enemy.getTerritory().get((int) (enemy.getTerritory().size() * Math.random()));
 
-        int xDist = target.getX() - x;
-        int yDist = target.getY() - y;
+        int xDist = (int) (target.getX() - x);
+        int yDist = (int) (target.getY() - y);
 
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
-
-        if(dist > range) {
-            //System.out.println(dist + " " + range);
-            gs.removeMissile(this);
-            return;
-        }
 
         xRate = xDist / dist;
         yRate = yDist / dist;
@@ -50,7 +55,7 @@ public class Missile {
         x += xRate;
         y += yRate;
 
-        if(target == null) {
+        if(target == null || target.getEmpire() == null) {
             gs.removeMissile(this);
             return;
         }
@@ -62,12 +67,14 @@ public class Missile {
 
         if(dist <= 0.5) {
             target.setStrength((float) (target.getStrength() * 0.1));
+            target.setHabitability((float) (target.getHabitability() * 0.9));
             if(target.getStrength() < 25) {
                 target.getEmpire().removeTerritory(target);
             }
             for(Pixel p : target.getNeighbors()) {
                 if(p.getEmpire() == target.getEmpire()) {
                     p.setStrength((float)(p.getStrength() * 0.2));
+                    target.setHabitability((float) (target.getHabitability() * 0.95));
                 }
             }
             gs.removeMissile(this);

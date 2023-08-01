@@ -207,9 +207,7 @@ public class GameState extends State {
             empires.remove(e);
         }
         dead = new ArrayList<>();
-        for(Empire e : revolts) {
-            empires.add(e);
-        }
+        empires.addAll(revolts);
         revolts = new ArrayList<>();
 
         Collections.shuffle(habitablePixels);
@@ -218,7 +216,7 @@ public class GameState extends State {
             if(Math.random() < 0.001) {
                 p.spawnBoat();
             }
-            if(Math.random() < 0.1) {
+            if(Math.random() < 0.001) {
                 p.spawnMissile();
             }
         }
@@ -228,9 +226,7 @@ public class GameState extends State {
         }
 
         for (Boat b : remBoats) {
-            if (boats.contains(b)) {
-                boats.remove(b);
-            }
+            boats.remove(b);
         }
         remBoats = new ArrayList<>();
 
@@ -239,9 +235,7 @@ public class GameState extends State {
         }
 
         for(Missile m : remMissiles) {
-            if(missiles.contains(m)) {
-                missiles.remove(m);
-            }
+            missiles.remove(m);
         }
         remMissiles = new ArrayList<>();
     }

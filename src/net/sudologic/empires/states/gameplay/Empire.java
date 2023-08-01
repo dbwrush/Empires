@@ -56,8 +56,7 @@ public class Empire {
             ideology[0] = ideology[0] * 0.9f;
         }
         if (capital.getEmpire() != this) {
-            Pixel p = territory.get((int) (Math.random() * territory.size()));
-            capital = p;
+            capital = territory.get((int) (Math.random() * territory.size()));
         }
         while (territory.contains(null)) {
             territory.remove(null);
@@ -68,7 +67,7 @@ public class Empire {
                 removeTerritory(null);
             } else {
                 if (Math.random() < 0.1) {
-                    setEnemy(p.revolt(), true);
+                    setEnemy(p.revolt(), true, true);
                 } else if (Math.random() < 0.1) {
                     for (Empire e : allies) {
                         if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
@@ -79,6 +78,17 @@ public class Empire {
             }
 
         }
+        ArrayList<Pixel> remPixels = new ArrayList<>();
+        for(Pixel p : territory) {
+            if(p.getEmpire() != this) {
+                remPixels.add(p);
+            }
+        }
+        for(Pixel p : remPixels) {
+            territory.remove(p);
+            //System.out.println("Pruned territory!");
+        }
+
         if (territory.size() > maxSize) {
             maxSize = territory.size();
         }
@@ -92,12 +102,8 @@ public class Empire {
             if (!gameState.getEmpires().contains(e)) {
                 deadEnemies.add(e);
             }
-            if(allies.contains(e)) {
-                allies.remove(e);
-            }
-            if(e.allies.contains(this)) {
-                e.allies.remove(this);
-            }
+            allies.remove(e);
+            e.allies.remove(this);
             if(!e.enemies.contains(this)) {
                 e.enemies.add(this);
             }
@@ -132,7 +138,7 @@ public class Empire {
         if(!gameState.getEmpires().contains(e) || e.getTerritory().size() == 0) {
             return;
         }
-        System.out.println(name + " is merging into " + e.getName());
+        //System.out.println(name + " is merging into " + e.getName());
         for(Pixel p : territory) {
             if(p != null && p.getEmpire() == this) {
                 p.setEmpire(e);
@@ -169,7 +175,7 @@ public class Empire {
         return ideology[2];
     }
 
-    public void setEnemy(Empire e, boolean recur) {
+    public void setEnemy(Empire e, boolean recur, boolean log) {
         if(e == null) {
             return;
         }
@@ -178,15 +184,15 @@ public class Empire {
         if(allies.contains(e) && coopIso < ideoDiff * 0.16f * Math.random()) {
             allies.remove(e);
             e.allies.remove(this);
-            setEnemy(e, false);
+            setEnemy(e, false, false);
         }
         if(!enemies.contains(e)) {
-            System.out.println(name + " is now an enemy of " + e.getName());
+            //System.out.println(name + " is now an enemy of " + e.getName());
             enemies.add(e);
-            e.setEnemy(this, true);
+            e.setEnemy(this, true, false);
             if(recur) {
                 for(Empire a : allies) {
-                    a.setEnemy(e, false);
+                    a.setEnemy(e, false, true);
                 }
             }
         }
@@ -196,7 +202,7 @@ public class Empire {
         if(enemies.contains(e)) {
             enemies.remove(e);
             e.enemies.remove(this);
-            System.out.println(name + " made peace with " + e.getName());
+            //System.out.println(name + " made peace with " + e.getName());
         }
     }
 

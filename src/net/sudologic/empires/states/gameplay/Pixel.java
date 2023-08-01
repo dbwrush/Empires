@@ -42,8 +42,8 @@ public class Pixel {
         gameState.addEmpire(empire);
         empire.addTerritory(this);
         strength = habitability * 20;
-        empire.setEnemy(old, true);
-        old.setEnemy(empire, true);
+        empire.setEnemy(old, true, true);
+        old.setEnemy(empire, true, true);
         empire.setCapital(this);
         System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
         return empire;
@@ -64,6 +64,10 @@ public class Pixel {
         return habitability;
     }
 
+    public void setHabitability(float habitability) {
+        this.habitability = habitability;
+    }
+
     public void render(Graphics g, ColorMode colorMode) {
         g.setColor(getColor(colorMode));
         g.fillRect(x * scale, y * scale, scale, scale);
@@ -73,8 +77,7 @@ public class Pixel {
         if (empire != null) {
             if(!gameState.getEmpires().contains(empire)) {
                 if(Math.random() < 0.01) {
-                    Empire old = empire;
-                    old.setEnemy(revolt(), true);
+                    revolt();
                 } else {
                     empire.removeTerritory(this);
                     empire = null;
@@ -126,7 +129,7 @@ public class Pixel {
                                 empire.setAlly(p.empire);
                             }
                             if (borderFriction > gameState.getWarThreshold() && coopIso < ideoDiff * 0.33f * Math.random() && !empire.getEnemies().contains(p.empire)) {
-                                empire.setEnemy(p.empire, true);
+                                empire.setEnemy(p.empire, true, true);
                             }
                             if (empire.getEnemies().contains(p.empire) && ((ideoDiff + (borderFriction / 5)) * 2 < gameState.getWarThreshold())) {
                                 empire.makePeace(p.empire);
@@ -190,7 +193,7 @@ public class Pixel {
         if(empire == null) {
             return;
         }
-        gameState.addMissile(new Missile(empire, strength * 2, x, y, gameState));
+        gameState.addMissile(new Missile(empire, strength, x, y, gameState));
     }
 
     public ArrayList<Pixel> getNeighbors() {

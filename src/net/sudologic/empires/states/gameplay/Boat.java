@@ -71,7 +71,7 @@ public class Boat {
                     if (ideoDiff < coopIso * Empire.getAllianceDifficulty()) {
                         empire.setAlly(target.getEmpire());
                     } else if(borderFriction > gs.getWarThreshold() && coopIso < ideoDiff && !empire.getEnemies().contains(target.getEmpire())) {
-                        empire.setEnemy(target.getEmpire(), true);
+                        empire.setEnemy(target.getEmpire(), true, true);
                     } else if(empire.getEnemies().contains(target.getEmpire()) && ((ideoDiff + (borderFriction / 5)) * 2 < gs.getWarThreshold())) {
                         empire.makePeace(target.getEmpire());
                     }
