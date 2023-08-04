@@ -4,6 +4,7 @@ import net.sudologic.empires.Game;
 import net.sudologic.empires.input.KeyManager;
 import net.sudologic.empires.states.gameplay.util.PerlinNoiseGenerator;
 import net.sudologic.empires.states.State;
+import net.sudologic.empires.states.gameplay.util.TerritoryManager;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -14,13 +15,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GameState extends State {
-    private ArrayList<Empire> empires, dead, revolts;
 
     private ArrayList<Pixel> habitablePixels;
+
+    private TerritoryManager tm;
 
     private ArrayList<Boat> boats, remBoats;
 
     private ArrayList<Missile> missiles, remMissiles;
+    private ArrayList<Paratrooper> paratroopers, remParatroopers;
 
     private Pixel[][] pixels;
 
@@ -34,12 +37,15 @@ public class GameState extends State {
 
     private KeyManager km;
 
+
+
     public GameState(Game game, int width, int height, int scale, int numEmpires, double warThreshold, KeyManager km) {
         super(game);
         System.out.println("Switched to GameState");
         this.km = km;
         this.warThreshold = warThreshold;
         this.scale = scale;
+        tm = new TerritoryManager();
         habitablePixels = new ArrayList<>();
         while(habitablePixels.size() < ((width / scale) * (height / scale)) / 2) {
             habitablePixels = new ArrayList<>();
@@ -50,9 +56,11 @@ public class GameState extends State {
         remBoats = new ArrayList<>();
         missiles = new ArrayList<>();
         remMissiles = new ArrayList<>();
+        paratroopers = new ArrayList<>();
+        remParatroopers = new ArrayList<>();
         colorMode = Pixel.ColorMode.empire;
-        revolts = new ArrayList<>();
         Collections.shuffle(habitablePixels);
+        perspectiveEmpire = getEmpires().get(0);
     }
 
     private void genTerrain(int width, int height, int scale) {
@@ -86,14 +94,13 @@ public class GameState extends State {
     }
 
     private void genEmpires(int numEmpires) {
-        empires = new ArrayList<>();
-        dead = new ArrayList<>();
+        ArrayList<Empire> empires = (ArrayList<Empire>) tm.getEmpires();
         while(empires.size() <= numEmpires) {
             Empire e = new Empire(this);
             System.out.println("Spawning " + e.getName());
             while(e.getCapital() == null) {
                 Pixel p = pixels[(int) (Math.random() * pixels.length)][(int) (Math.random() * pixels[0].length)];
-                if(p.getEmpire() == null && p.isHabitable()) {
+                if(tm.getEmpireForPixel(p) == null && p.isHabitable()) {
                     e.addTerritory(p);
                     e.setCapital(p);
                     e.getCapital().setStrength(2);
@@ -101,10 +108,6 @@ public class GameState extends State {
             }
             empires.add(e);
         }
-    }
-
-    public void addEmpire(Empire empire) {
-        revolts.add(empire);
     }
 
     public double getWarThreshold() {
@@ -117,6 +120,10 @@ public class GameState extends State {
 
     public void removeMissile(Missile m) {
         remMissiles.add(m);
+    }
+
+    public void removeParatrooper(Paratrooper p) {
+        remParatroopers.add(p);
     }
 
     public ArrayList<Pixel> getNeighbors(int x, int y) {
@@ -179,8 +186,8 @@ public class GameState extends State {
         if (warThreshold > 0 && Math.random() < 0.01) {
             warThreshold -= 1;
         }
-        if(!empires.contains(perspectiveEmpire)) {
-            perspectiveEmpire = empires.get(0);
+        if(!tm.getEmpires().contains(perspectiveEmpire)) {
+            perspectiveEmpire = tm.getEmpires().get(0);
         }
         if (km.isKeyPressed(KeyEvent.VK_1)) {
             colorMode = Pixel.ColorMode.empire;
@@ -206,19 +213,17 @@ public class GameState extends State {
         if(km.isKeyPressed(KeyEvent.VK_8)) {
             colorMode = Pixel.ColorMode.perspective;
         }
+        if(km.isKeyPressed(KeyEvent.VK_9)) {
+            colorMode = Pixel.ColorMode.habitability;
+        }
+        ArrayList<Empire> empires = (ArrayList<Empire>) tm.getEmpires();
         Collections.shuffle(empires);
         for (Empire e : empires) {
             e.tick();
             if (e.getTerritory().size() == 0) {
-                removeEmpire(e);
+                tm.removeEmpire(e);
             }
         }
-        for (Empire e : dead) {
-            empires.remove(e);
-        }
-        dead = new ArrayList<>();
-        empires.addAll(revolts);
-        revolts = new ArrayList<>();
 
         Collections.shuffle(habitablePixels);
         for (Pixel p : habitablePixels) {
@@ -228,6 +233,9 @@ public class GameState extends State {
             }
             if(Math.random() < 0.0001) {
                 p.spawnMissile();
+            }
+            if(Math.random() < 0.00001) {
+                p.spawnParatrooer();
             }
         }
 
@@ -248,22 +256,18 @@ public class GameState extends State {
             missiles.remove(m);
         }
         remMissiles = new ArrayList<>();
+
+        for (Paratrooper p : paratroopers) {
+            p.tick();
+        }
+
+        for(Paratrooper p : remParatroopers) {
+            paratroopers.remove(p);
+        }
+        remParatroopers = new ArrayList<>();
     }
     public int getScale() {
         return scale;
-    }
-
-    public void removeEmpire(Empire e) {
-        for(Pixel p : habitablePixels) {
-            if(p.getEmpire() == e) {
-                e.removeTerritory(p);
-            }
-        }
-        e.getTerritory().clear();
-        if(!dead.contains(e)) {
-            dead.add(e);
-        }
-        System.out.println(e.getName() + " has been eliminated.");
     }
 
     public int getWidth() {
@@ -275,7 +279,7 @@ public class GameState extends State {
     }
 
     public ArrayList<Empire> getEmpires() {
-        return empires;
+        return (ArrayList<Empire>) tm.getEmpires();
     }
 
     public void setColorMode(Pixel.ColorMode colorMode) {
@@ -292,11 +296,14 @@ public class GameState extends State {
         for(Boat b : boats) {
             b.render(g, scale);
         }
-        for(Empire e : empires) {
+        for(Empire e : getEmpires()) {
             e.render(g);
         }
         for(Missile m : missiles) {
             m.render(g, scale);
+        }
+        for(Paratrooper p : paratroopers) {
+            p.render(g, scale);
         }
     }
 
@@ -304,8 +311,8 @@ public class GameState extends State {
         int x = point.x / scale;
         int y = point.y / scale;
 
-        if(pixels[x][y].getEmpire() != null) {
-            perspectiveEmpire = pixels[x][y].getEmpire();
+        if(tm.getEmpireForPixel(pixels[x][y]) != null) {
+            perspectiveEmpire = tm.getEmpireForPixel(pixels[x][y]);
         }
     }
 
@@ -316,4 +323,13 @@ public class GameState extends State {
     public void addMissile(Missile missile) {
         missiles.add(missile);
     }
+
+    public void addParatrooper(Paratrooper paratrooper) {
+        paratroopers.add(paratrooper);
+    }
+
+    public TerritoryManager getTerritoryManager() {
+        return tm;
+    }
+
 }

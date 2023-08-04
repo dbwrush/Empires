@@ -62,7 +62,7 @@ public class Game implements Runnable{
         init();
 
         //game loop timer setup
-        int desiredFps = 10;
+        int desiredFps = 100;
         double timePerTick = 1000000000 / desiredFps;//timePerTick will be the number of nanoseconds per tick. 1 second is 1 billion nanoseconds.
         double delta = 0;
         long now;

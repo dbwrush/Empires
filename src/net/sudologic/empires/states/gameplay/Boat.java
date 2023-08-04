@@ -47,6 +47,7 @@ public class Boat {
                 if(target.getHabitability() < strength) {
                     //System.out.println("Boat discovered territory for " + empire.getName());
                     empire.addTerritory(target);
+                    target.setAge(0);
                     target.setStrength((float) (strength - target.getHabitability()));
                 }
                 //System.out.println("Boat landed");
@@ -55,9 +56,11 @@ public class Boat {
                     //System.out.println("Boat captured territory for " + empire.getName());
                     target.setStrength((float) strength);
                     empire.addTerritory(target);
+                    target.setAge(0);
+                } else {
+                    target.setStrength((float) (target.getStrength() - strength));
                 }
                 //System.out.println("Boat landed");
-                empire.addTerritory(target);
             } else {
                 if(target.getEmpire() != empire) {
                     float ideoDiff = (float) empire.ideoDifference(target.getEmpire());

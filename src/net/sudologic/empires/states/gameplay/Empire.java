@@ -2,6 +2,7 @@ package net.sudologic.empires.states.gameplay;
 
 import net.sudologic.empires.Game;
 import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
+import net.sudologic.empires.states.gameplay.util.TerritoryManager;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -11,12 +12,13 @@ import java.util.List;
 public class Empire {
     private String name;
     private ArrayList<Empire> allies, enemies;
-    private ArrayList<Pixel> territory;
     private double[] ideology;
 
     private int maxSize = 0;
     private static float mergeDifficulty = 0.03f;
     private static float allianceDifficulty = 1.2f;
+
+    public static TerritoryManager tm;
 
     private GameState gameState;
 
@@ -29,7 +31,8 @@ public class Empire {
                                 //CoopIso      AuthLib        LeftRight
         name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], null);
         color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
-        territory = new ArrayList<>();
+        tm = gameState.getTerritoryManager();
+        tm.addEmpire(this);
         enemies = new ArrayList<>();
         allies = new ArrayList<>();
         this.gameState = gameState;
@@ -41,14 +44,15 @@ public class Empire {
         String[] p = oldName.split(" ");
         this.name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], p[p.length - 1]);
         color = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
-        territory = new ArrayList<>();
+        tm = gameState.getTerritoryManager();
+        tm.addEmpire(this);
         enemies = new ArrayList<>();
         allies = new ArrayList<>();
         this.gameState = gameState;
     }
 
     public void tick() {
-        if (territory.size() == 0) {
+        if (getTerritory().size() == 0) {
             return;
         }
         if (enemies.size() == 0 && Math.random() < 0.01) {
@@ -60,43 +64,36 @@ public class Empire {
                 ideology[0] = 255;
             }
         }
-        if (capital.getEmpire() != this) {
-            capital = territory.get(0);
+        if (tm.getEmpireForPixel(capital) != this) {
+            capital = getTerritory().get(0);
         }
-        while (territory.contains(null)) {
-            territory.remove(null);
+        while (getTerritory().contains(null)) {
+            removeTerritory(null);
         }
-        if (maxSize > 0 && Math.random() > territory.size() / (maxSize * 0.66f) && territory.size() > 10) {
-            Pixel p = territory.get((int) (Math.random() * territory.size()));
+        if(maxSize > 0 && Math.random() < (maxSize - getTerritory().size()) / getTerritory().size()) {
+        //if (maxSize > 0 && Math.random() > territory.size() / (maxSize * 0.66f) && territory.size() > 10) {
+            Pixel p = getTerritory().get((int) (Math.random() * getTerritory().size()));
             if (p == null) {
                 removeTerritory(null);
             } else {
-                if (Math.random() < 0.1) {
+                double r = Math.random();
+                if (r < 0.1) {
                     setEnemy(p.revolt(), true, true);
-                } else if (Math.random() < 0.1) {
+                } else if (r < 0.3) {
                     for (Empire e : allies) {
                         if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
                             mergeInto(e);
+                            return;
                         }
                     }
-                } else if (Math.random() < 0.1) {
-                    gameState.removeEmpire(this);
+                } else if (r > 0.99) {
+                    tm.removeEmpire(this);
                 }
             }
         }
-        ArrayList<Pixel> remPixels = new ArrayList<>();
-        for(Pixel p : territory) {
-            if(p.getEmpire() != this) {
-                remPixels.add(p);
-            }
-        }
-        for(Pixel p : remPixels) {
-            territory.remove(p);
-            //System.out.println("Pruned territory!");
-        }
 
-        if (territory.size() > maxSize) {
-            maxSize = territory.size();
+        if (getTerritory().size() > maxSize) {
+            maxSize = getTerritory().size();
         }
         for (Empire e : allies) {
             if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
@@ -118,6 +115,20 @@ public class Empire {
             if(!gameState.getEmpires().contains(e)) {
                 deadEmpires.add(e);
             }
+            if(!e.getAllies().contains(this)) {
+                deadEmpires.add(e);
+            }
+            for(Empire enemy : e.getEnemies()) {
+                if(allies.contains(enemy)) {
+                    if(ideoDifference(e) < ideoDifference(enemy)) {
+                        deadEmpires.add(enemy);
+                        allies.remove(e);
+                    } else {
+                        deadEmpires.add(e);
+                        allies.remove(enemy);
+                    }
+                }
+            }
         }
         for (Empire e : deadEmpires) {
             enemies.remove(e);
@@ -134,15 +145,8 @@ public class Empire {
     }
 
     public void removeTerritory(Pixel pixel) {
-        if(territory.contains(pixel)) {
-            if(pixel == null) {
-                territory.remove(null);
-                return;
-            }
-            if(pixel.getEmpire() == this) {
-                pixel.setEmpire(null);
-            }
-            territory.remove(pixel);
+        if(tm.getPixelsForEmpire(this).contains(pixel)) {
+            tm.removePixelFromEmpire(pixel);
         }
     }
 
@@ -151,16 +155,14 @@ public class Empire {
             return;
         }
         //System.out.println(name + " is merging into " + e.getName());
-        for(Pixel p : territory) {
-            if(p != null && p.getEmpire() == this) {
+        Pixel[] pixels = getTerritory().toArray(Pixel[]::new);
+        for(Pixel p : pixels) {
+            if(p != null && tm.getEmpireForPixel(p) == this) {
                 float age = p.getAge();
-                p.setEmpire(e);
                 e.addTerritory(p);
                 p.setAge(age);
             }
         }
-        territory.clear();
-        gameState.removeEmpire(this);
     }
 
     public void render(Graphics g) {
@@ -191,7 +193,7 @@ public class Empire {
     }
 
     public void setEnemy(Empire e, boolean recur, boolean log) {
-        if(e == null) {
+        if(e == null || e == this) {
             return;
         }
         double coopIso = (float) ((ideology[0] + e.getCoopIso()) / 2);
@@ -222,6 +224,19 @@ public class Empire {
     }
 
     public void setAlly(Empire e) {
+        if(e == this) {
+            return;
+        }
+        for(Empire a : allies) {
+            if(a.getEnemies().contains(e)) {
+                return;
+            }
+        }
+        for(Empire a : e.getAllies()) {
+            if(a.getEnemies().contains(this)) {
+                return;
+            }
+        }
         makePeace(e);
         if(allies.contains(e)) {
             return;
@@ -241,17 +256,11 @@ public class Empire {
 
     public void addTerritory(Pixel pixel) {
         //System.out.println(name + " gained territory!");
-        if(pixel.getEmpire() != null) {
-            pixel.getEmpire().removeTerritory(pixel);
-        }
-        if(!territory.contains(pixel)) {
-            territory.add(pixel);
-        }
-        pixel.setEmpire(this);
+        tm.addPixelToEmpire(pixel,this);
     }
 
-    public ArrayList<Pixel> getTerritory() {
-        return territory;
+    public List<Pixel> getTerritory() {
+        return tm.getPixelsForEmpire(this);
     }
 
     public String getName() {

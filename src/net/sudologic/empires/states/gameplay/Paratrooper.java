@@ -1,30 +1,31 @@
 package net.sudologic.empires.states.gameplay;
 
 import java.awt.*;
-import java.util.ArrayList;
 
-public class Missile {
+public class Paratrooper {
     private Empire empire;
-    private double xRate, yRate, dist;
+    private double xRate, yRate, dist, strength;
     private Pixel target;
     private double x, y;
     private GameState gs;
 
-    public Missile(Empire empire, int x, int y, GameState gs) {
+
+    public Paratrooper(Empire empire, int x, int y, GameState gs, double strength) {
         //System.out.println(empire.getName() + " launched a missile!");
         this.empire = empire;
         this.x = x;
         this.y = y;
         this.gs = gs;
+        this.strength = strength;
 
         if(empire.getEnemies().size() == 0) {
-            gs.removeMissile(this);
+            gs.removeParatrooper(this);
             return;
         }
         Empire enemy = empire.getEnemies().get((int) (Math.random() * empire.getEnemies().size()));
 
         if(enemy.getTerritory().size() == 0) {
-            gs.removeMissile(this);
+            gs.removeParatrooper(this);
             return;
         }
 
@@ -33,8 +34,8 @@ public class Missile {
 
     public void pickTarget(Empire enemy) {
         int size = enemy.getTerritory().size();
-        int firstpart = (int) (size * 0.90);
-        int secondpart = (int) (size * 0.01);
+        int firstpart = (int) (size * 0.00);
+        int secondpart = (int) (size * 0.1);
         target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
 
         int xDist = (int) (target.getX() - x);
@@ -51,7 +52,7 @@ public class Missile {
         y += yRate;
 
         if(target == null || target.getEmpire() == null) {
-            gs.removeMissile(this);
+            gs.removeParatrooper(this);
             return;
         }
 
@@ -61,22 +62,17 @@ public class Missile {
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
 
         if(dist <= 0.5) {
-            target.setStrength((float) (target.getStrength() * 0.1));
-            //target.setHabitability((float) (target.getHabitability() * 0.9));
-            for(Pixel p : target.getNeighbors()) {
-                if(p.getEmpire() == target.getEmpire()) {
-                    p.setStrength((float)(p.getStrength() * 0.2));
-                    //target.setHabitability((float) (target.getHabitability() * 0.95));
-                }
+            if(target.getStrength() * 3 < strength) {
+                empire.addTerritory(target);
             }
-            gs.removeMissile(this);
+            gs.removeParatrooper(this);
             return;
         }
     }
 
     public void render(Graphics g, int scale) {
         //System.out.println("Rendered missile!");
-        g.setColor(Color.RED);
+        g.setColor(Color.GREEN);
         g.fillRect((int) (x * scale), (int) (y * scale), scale, scale);
     }
 }
