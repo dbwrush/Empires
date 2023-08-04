@@ -62,9 +62,11 @@ public class Paratrooper {
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
 
         if(dist <= 0.5) {
-            if(target.getStrength() * 3 < strength) {
+            if(target.getStrength() < strength) {
                 empire.addTerritory(target);
                 target.setAge(0);
+            } else {
+                target.setStrength((float) (target.getStrength() - strength));
             }
             gs.removeParatrooper(this);
             return;

@@ -35,6 +35,10 @@ public class Missile {
         int size = enemy.getTerritory().size();
         int firstpart = (int) (size * 0.90);
         int secondpart = (int) (size * 0.01);
+        if(Math.random() < 0.5) {
+            firstpart = (int) (size * 0);
+        }
+
         target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
 
         int xDist = (int) (target.getX() - x);
