@@ -11,7 +11,6 @@ import java.util.List;
 public class Empire {
     private String name;
     private ArrayList<Empire> allies, enemies;
-
     private ArrayList<Pixel> territory;
     private double[] ideology;
 
@@ -52,11 +51,17 @@ public class Empire {
         if (territory.size() == 0) {
             return;
         }
-        if (enemies.size() == 0 && Math.random() < 0.1) {
+        if (enemies.size() == 0 && Math.random() < 0.01) {
             ideology[0] = ideology[0] * 0.9f;
         }
+        if (Math.random() < 0.01 * allies.size()) {
+            ideology[0] = ideology[0] * 1.1f;
+            if(ideology[0] > 255) {
+                ideology[0] = 255;
+            }
+        }
         if (capital.getEmpire() != this) {
-            capital = territory.get((int) (Math.random() * territory.size()));
+            capital = territory.get(0);
         }
         while (territory.contains(null)) {
             territory.remove(null);
@@ -74,9 +79,10 @@ public class Empire {
                             mergeInto(e);
                         }
                     }
+                } else if (Math.random() < 0.1) {
+                    gameState.removeEmpire(this);
                 }
             }
-
         }
         ArrayList<Pixel> remPixels = new ArrayList<>();
         for(Pixel p : territory) {
@@ -97,10 +103,10 @@ public class Empire {
                 mergeInto(e);
             }
         }
-        ArrayList<Empire> deadEnemies = new ArrayList<>();
+        ArrayList<Empire> deadEmpires = new ArrayList<>();
         for (Empire e : enemies) {
             if (!gameState.getEmpires().contains(e)) {
-                deadEnemies.add(e);
+                deadEmpires.add(e);
             }
             allies.remove(e);
             e.allies.remove(this);
@@ -108,8 +114,14 @@ public class Empire {
                 e.enemies.add(this);
             }
         }
-        for (Empire e : deadEnemies) {
+        for(Empire e : allies) {
+            if(!gameState.getEmpires().contains(e)) {
+                deadEmpires.add(e);
+            }
+        }
+        for (Empire e : deadEmpires) {
             enemies.remove(e);
+            allies.remove(e);
         }
     }
 
@@ -141,7 +153,10 @@ public class Empire {
         //System.out.println(name + " is merging into " + e.getName());
         for(Pixel p : territory) {
             if(p != null && p.getEmpire() == this) {
+                float age = p.getAge();
                 p.setEmpire(e);
+                e.addTerritory(p);
+                p.setAge(age);
             }
         }
         territory.clear();
@@ -155,8 +170,8 @@ public class Empire {
         if(x < 0) {
             x = 0;
         }
-        if(x + (name.length() / 0.8f) > gameState.getWidth()) {
-            x -= (name.length() / 0.8f);
+        if(x + (name.length() * 1.5f) > gameState.getWidth()) {
+            x -= (name.length() * 0.4f);
         }
         if(y < 2) {
             y = 2;
@@ -213,7 +228,7 @@ public class Empire {
         }
         allies.add(e);
         e.allies.add(this);
-        System.out.println(name + " is now allied with " + e.getName());
+        //System.out.println(name + " is now allied with " + e.getName());
     }
 
     public double ideoDifference(Empire e) {
@@ -253,7 +268,13 @@ public class Empire {
     }
 
     public Color getIdeologyColor() {
-        return new Color((int) (ideology[0]), (int) (ideology[1]), (int) (ideology[2]));
+        double[] colors = ideology;
+        for(int i = 0; i < colors.length; i++) {
+            if(colors[i] > 255) {
+                colors[i] = 255;
+            }
+        }
+        return new Color((int) (colors[0]), (int) (colors[1]), (int) (colors[2]));
     }
 
     public ArrayList<Empire> getAllies() {

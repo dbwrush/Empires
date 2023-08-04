@@ -26,6 +26,8 @@ public class GameState extends State {
 
     private int scale;
 
+    private Empire perspectiveEmpire;
+
     private double warThreshold;
 
     private Pixel.ColorMode colorMode;
@@ -50,18 +52,19 @@ public class GameState extends State {
         remMissiles = new ArrayList<>();
         colorMode = Pixel.ColorMode.empire;
         revolts = new ArrayList<>();
+        Collections.shuffle(habitablePixels);
     }
 
     private void genTerrain(int width, int height, int scale) {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
-        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.003f, 4);
+        PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.01f, 4);
         float[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
             for(int y = 0; y < pixels[0].length; y++) {
                 //System.out.println("X: " + x + " Y: " + y);
                 float h = (habitability[x][y] + 1) / 2;
-                if(h < 0.5) {
+                if(h < 0.4) {
                     h = 0;
                 }
                 Pixel p = new Pixel(x, y, h, scale, this);
@@ -78,6 +81,10 @@ public class GameState extends State {
         return habitablePixels;
     }
 
+    public Empire getPerspectiveEmpire() {
+        return perspectiveEmpire;
+    }
+
     private void genEmpires(int numEmpires) {
         empires = new ArrayList<>();
         dead = new ArrayList<>();
@@ -89,6 +96,7 @@ public class GameState extends State {
                 if(p.getEmpire() == null && p.isHabitable()) {
                     e.addTerritory(p);
                     e.setCapital(p);
+                    e.getCapital().setStrength(2);
                 }
             }
             empires.add(e);
@@ -171,7 +179,9 @@ public class GameState extends State {
         if (warThreshold > 0 && Math.random() < 0.01) {
             warThreshold -= 1;
         }
-
+        if(!empires.contains(perspectiveEmpire)) {
+            perspectiveEmpire = empires.get(0);
+        }
         if (km.isKeyPressed(KeyEvent.VK_1)) {
             colorMode = Pixel.ColorMode.empire;
         }
@@ -193,14 +203,14 @@ public class GameState extends State {
         if (km.isKeyPressed(KeyEvent.VK_7)) {
             colorMode = Pixel.ColorMode.alliance;
         }
-
+        if(km.isKeyPressed(KeyEvent.VK_8)) {
+            colorMode = Pixel.ColorMode.perspective;
+        }
         Collections.shuffle(empires);
         for (Empire e : empires) {
             e.tick();
             if (e.getTerritory().size() == 0) {
                 removeEmpire(e);
-            } else {
-                Collections.shuffle(e.getTerritory());
             }
         }
         for (Empire e : dead) {
@@ -213,7 +223,7 @@ public class GameState extends State {
         Collections.shuffle(habitablePixels);
         for (Pixel p : habitablePixels) {
             p.tick();
-            if(Math.random() < 0.001) {
+            if(Math.random() < 0.01) {
                 p.spawnBoat();
             }
             if(Math.random() < 0.0001) {
@@ -246,13 +256,14 @@ public class GameState extends State {
     public void removeEmpire(Empire e) {
         for(Pixel p : habitablePixels) {
             if(p.getEmpire() == e) {
-                e.addTerritory(p);
+                e.removeTerritory(p);
             }
         }
-        if(e.getTerritory().size() == 0 || !dead.contains(e)) {
+        e.getTerritory().clear();
+        if(!dead.contains(e)) {
             dead.add(e);
         }
-        //System.out.println(e.getName() + " has been eliminated.");
+        System.out.println(e.getName() + " has been eliminated.");
     }
 
     public int getWidth() {
@@ -286,6 +297,15 @@ public class GameState extends State {
         }
         for(Missile m : missiles) {
             m.render(g, scale);
+        }
+    }
+
+    public void mouseClicked(Point point) {
+        int x = point.x / scale;
+        int y = point.y / scale;
+
+        if(pixels[x][y].getEmpire() != null) {
+            perspectiveEmpire = pixels[x][y].getEmpire();
         }
     }
 

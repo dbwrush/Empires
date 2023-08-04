@@ -2,6 +2,7 @@ package net.sudologic.empires;
 
 import net.sudologic.empires.display.Display;
 import net.sudologic.empires.input.KeyManager;
+import net.sudologic.empires.input.MouseManager;
 import net.sudologic.empires.states.gameplay.GameState;
 import net.sudologic.empires.states.State;
 
@@ -14,6 +15,7 @@ public class Game implements Runnable{
     private String title;
 
     private KeyManager keyManager;
+    private MouseManager mouseManager;
 
     private FileManager fileManager;
 
@@ -43,7 +45,16 @@ public class Game implements Runnable{
         display = new Display(title, width, height);
         display.getFrame().addKeyListener(keyManager);
         gameState = new GameState(this, width, height, scale, numEmpires, warThreshold,  keyManager);
+        mouseManager = new MouseManager(display.getCanvas(), this);
         State.setCurrentState(gameState);
+    }
+
+    public Display getDisplay() {
+        return display;
+    }
+
+    public GameState getGameState() {
+        return gameState;
     }
 
     @Override
@@ -51,7 +62,7 @@ public class Game implements Runnable{
         init();
 
         //game loop timer setup
-        int desiredFps = 60;
+        int desiredFps = 10;
         double timePerTick = 1000000000 / desiredFps;//timePerTick will be the number of nanoseconds per tick. 1 second is 1 billion nanoseconds.
         double delta = 0;
         long now;
@@ -104,10 +115,10 @@ public class Game implements Runnable{
         State.getCurrentState().tick();
         if(State.getCurrentState() instanceof GameState) {
             GameState gs = (GameState) State.getCurrentState();
-            if(gs.getEmpires().size() == 1) {
+            /*if(gs.getEmpires().size() == 1) {
                 running = false;
                 System.out.println(gs.getEmpires().get(0).getName() + " has won the game.");
-            }
+            }*/
         }
     }
 

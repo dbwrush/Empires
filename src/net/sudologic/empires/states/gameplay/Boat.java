@@ -55,11 +55,6 @@ public class Boat {
                     //System.out.println("Boat captured territory for " + empire.getName());
                     target.setStrength((float) strength);
                     empire.addTerritory(target);
-                    for(Pixel p : target.getNeighbors()) {
-                        if(empire.getEnemies().contains(p.getEmpire())) {
-                            empire.addTerritory(p);
-                        }
-                    }
                 }
                 //System.out.println("Boat landed");
                 empire.addTerritory(target);

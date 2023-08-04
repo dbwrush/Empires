@@ -10,7 +10,7 @@ public class Missile {
     private double x, y;
     private GameState gs;
 
-    public Missile(Empire empire, double range, int x, int y, GameState gs) {
+    public Missile(Empire empire, int x, int y, GameState gs) {
         //System.out.println(empire.getName() + " launched a missile!");
         this.empire = empire;
         this.x = x;
@@ -29,18 +29,13 @@ public class Missile {
         }
 
         pickTarget(enemy);
-
-        for(int i = 0; i < 5; i++) {
-            if(dist > range) {
-                pickTarget(enemy);
-            } else {
-                break;
-            }
-        }
     }
 
     public void pickTarget(Empire enemy) {
-        target = enemy.getTerritory().get((int) (enemy.getTerritory().size() * Math.random()));
+        int size = enemy.getTerritory().size();
+        int firstpart = (int) (size * 0.90);
+        int secondpart = (int) (size * 0.01);
+        target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
 
         int xDist = (int) (target.getX() - x);
         int yDist = (int) (target.getY() - y);
@@ -68,9 +63,6 @@ public class Missile {
         if(dist <= 0.5) {
             target.setStrength((float) (target.getStrength() * 0.1));
             target.setHabitability((float) (target.getHabitability() * 0.9));
-            if(target.getStrength() < 25) {
-                target.getEmpire().removeTerritory(target);
-            }
             for(Pixel p : target.getNeighbors()) {
                 if(p.getEmpire() == target.getEmpire()) {
                     p.setStrength((float)(p.getStrength() * 0.2));

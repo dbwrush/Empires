@@ -15,11 +15,13 @@ public class Pixel {
         need,
         age,
         friction,
-        alliance
+        alliance,
+        perspective
     }
 
     private int x, y, scale;
     private static int maxAge = 2048;
+    private boolean ticked;
     private float strength, borderFriction, habitability, need, age;
     private Empire empire;
     private GameState gameState;
@@ -45,7 +47,7 @@ public class Pixel {
         empire.setEnemy(old, true, true);
         old.setEnemy(empire, true, true);
         empire.setCapital(this);
-        System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
+        //System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
         return empire;
     }
 
@@ -69,6 +71,7 @@ public class Pixel {
     }
 
     public void render(Graphics g, ColorMode colorMode) {
+        age += 0.5f;
         g.setColor(getColor(colorMode));
         g.fillRect(x * scale, y * scale, scale, scale);
     }
@@ -76,29 +79,24 @@ public class Pixel {
     public void tick() {
         if (empire != null) {
             if(!gameState.getEmpires().contains(empire)) {
+                empire.removeTerritory(this);
+                empire = null;
+                return;
+            }
+            borderFriction = 0;
+            strength += habitability;
+            if(strength < habitability) {
                 if(Math.random() < 0.01) {
                     revolt();
                 } else {
                     empire.removeTerritory(this);
                     empire = null;
-                }
-                return;
-            }
-            borderFriction = 0;
-            age += 0.5f;
-            if(strength < 0) {
-                if(Math.random() < 0.5) {
-                    revolt();
-                } else {
-                    empire.removeTerritory(this);
-                    empire = null;
                     strength = 0;
+                    return;
                 }
-                return;
             }
-            strength += habitability * Math.random();
-            if(strength > 255) {
-                strength = 255;
+            if(strength > 255 * habitability) {
+                strength = 255 * habitability;
             }
             friendlyNeighbors = new ArrayList<>();
             float tneed = 0;
@@ -110,13 +108,13 @@ public class Pixel {
             }
             for (Pixel p : neighbors) {
                 if (p.isHabitable()) {
-                    if (p.habitability < strength) {
+                    if (( 1 - p.habitability) * 3 < strength) {
                         if (p.empire == null) {
                             //System.out.println("Empire is null!");
                             tneed += 40f;
                             empire.addTerritory(p);
                             strength -= p.habitability;
-                        } else if (empire.getEnemies().contains(p.empire) && p.strength < strength) {
+                        } else if (empire.getEnemies().contains(p.empire) && p.strength * 3 < strength) {
                             empire.addTerritory(p);
                             strength -= p.strength;
                             p.strength = strength / 2;
@@ -126,9 +124,9 @@ public class Pixel {
                     if (p.empire != null) {
                         if (p.empire != empire) {
                             if(empire.getAllies().contains(p.empire)) {
-                                borderFriction += (strength + p.strength) / 5;
+                                borderFriction += (strength + p.strength) / 5 * habitability;
                             } else {
-                                borderFriction += (strength + p.strength) / 2;
+                                borderFriction += (strength + p.strength) / 2 * habitability;
                             }
                             float ideoDiff = (float) empire.ideoDifference(p.empire);
                             float coopIso = (float) ((empire.getCoopIso() + p.empire.getCoopIso()) / 4);
@@ -156,6 +154,10 @@ public class Pixel {
                     }
                 } else {
                     tneed += 1f;
+                }
+                tneed -= strength;
+                if(tneed <= 0) {
+                    tneed = 0;
                 }
             }
             float totalNeed = tneed;
@@ -200,7 +202,7 @@ public class Pixel {
         if(empire == null) {
             return;
         }
-        gameState.addMissile(new Missile(empire, strength, x, y, gameState));
+        gameState.addMissile(new Missile(empire, x, y, gameState));
     }
 
     public ArrayList<Pixel> getNeighbors() {
@@ -239,6 +241,14 @@ public class Pixel {
             case strength:
                 if (empire != null) {
                     int s = (int) strength;
+                    if(friendlyNeighbors != null) {
+                        for(Pixel p : friendlyNeighbors) {
+                            s += p.getStrength();
+                        }
+                        if(friendlyNeighbors.size() > 0) {
+                            s /= friendlyNeighbors.size();
+                        }
+                    }
                     if (s > 255) {
                         s = 255;
                     }
@@ -273,7 +283,7 @@ public class Pixel {
                 }
             case friction:
                 if(empire != null) {
-                    int f = (int) (borderFriction - empire.getCoopIso());
+                    int f = (int) (borderFriction - empire.getCoopIso()) * 3;
                     if(f > 255) {
                         f = 255;
                     }
@@ -294,6 +304,19 @@ public class Pixel {
 
                     return new Color(r, g, 0);
                 }
+            case perspective:
+                if(empire != null) {
+                    if(gameState.getPerspectiveEmpire() == empire) {
+                        return Color.YELLOW;
+                    }
+                    if(gameState.getPerspectiveEmpire().getEnemies().contains(empire)) {
+                        return Color.RED;
+                    }
+                    if(gameState.getPerspectiveEmpire().getAllies().contains(empire)) {
+                        return Color.CYAN;
+                    }
+                    return new Color(0, ((int) empire.ideoDifference(gameState.getPerspectiveEmpire()) / 3), 0);
+                }
             default:
                 if (habitability == 0) {
                     return new Color(0, 0, 100);
@@ -301,5 +324,13 @@ public class Pixel {
                     return new Color(0, (int) (habitability * 200), 0);
                 }
         }
+    }
+
+    public float getAge() {
+        return age;
+    }
+
+    public void setAge(float age) {
+        this.age = age;
     }
 }
