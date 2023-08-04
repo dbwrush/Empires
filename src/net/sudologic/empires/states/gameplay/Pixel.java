@@ -192,8 +192,8 @@ public class Pixel {
         if(tm.getEmpireForPixel(this) == null) {
             return;
         }
-        gameState.addParatrooper(new Paratrooper(tm.getEmpireForPixel(this), x, y, gameState, strength * 0.5));
-        strength *= 2;
+        gameState.addParatrooper(new Paratrooper(tm.getEmpireForPixel(this), x, y, gameState, strength * 0.9));
+        strength *= 0.1;
     }
 
     public ArrayList<Pixel> getNeighbors() {
