@@ -225,19 +225,7 @@ public class GameState extends State {
             }
         }
 
-        Collections.shuffle(habitablePixels);
-        for (Pixel p : habitablePixels) {
-            p.tick();
-            if(Math.random() < 0.01) {
-                p.spawnBoat();
-            }
-            if(Math.random() < 0.0001) {
-                p.spawnMissile();
-            }
-            if(Math.random() < 0.00001) {
-                p.spawnParatrooer();
-            }
-        }
+        tickPixels();
 
         for (Boat b : boats) {
             b.tick();
@@ -265,6 +253,34 @@ public class GameState extends State {
             paratroopers.remove(p);
         }
         remParatroopers = new ArrayList<>();
+    }
+
+    private void tickPixels() {
+        Collections.shuffle(habitablePixels);
+        for (Pixel p : habitablePixels) {
+            p.strengthPhase();
+            if(Math.random() < 0.01) {
+                p.spawnBoat();
+            }
+            if(Math.random() < 0.001) {
+                p.spawnMissile();
+            }
+            if(Math.random() < 0.0001) {
+                p.spawnParatrooer();
+            }
+        }
+        for(Pixel p : habitablePixels) {
+            p.attackPhase();
+        }
+        for(Pixel p : habitablePixels) {
+            p.needPhase();
+        }
+        for(Pixel p : habitablePixels) {
+            p.needSpreadPhase();
+        }
+        for(Pixel p : habitablePixels) {
+            p.resourcePhase();
+        }
     }
     public int getScale() {
         return scale;

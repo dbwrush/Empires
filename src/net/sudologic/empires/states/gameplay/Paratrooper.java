@@ -35,13 +35,17 @@ public class Paratrooper {
     public void pickTarget(Empire enemy) {
         int size = enemy.getTerritory().size();
         int firstpart = (int) (size * 0.00);
-        int secondpart = (int) (size * 0.1);
+        int secondpart = (int) (size * 0.01);
         target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
 
         int xDist = (int) (target.getX() - x);
         int yDist = (int) (target.getY() - y);
 
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
+
+        if(dist > strength) {
+            gs.removeParatrooper(this);
+        }
 
         xRate = xDist / dist;
         yRate = yDist / dist;
@@ -62,14 +66,14 @@ public class Paratrooper {
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
 
         if(dist <= 0.5) {
-            if(target.getStrength() < strength) {
+            if(target.getStrength() * 3< strength) {
                 empire.addTerritory(target);
                 target.setAge(0);
+                target.setStrength((float) strength);
             } else {
                 target.setStrength((float) (target.getStrength() - strength));
             }
             gs.removeParatrooper(this);
-            return;
         }
     }
 

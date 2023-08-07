@@ -5,17 +5,18 @@ import java.util.ArrayList;
 
 public class Missile {
     private Empire empire;
-    private double xRate, yRate, dist;
+    private double xRate, yRate, dist, strength;
     private Pixel target;
     private double x, y;
     private GameState gs;
 
-    public Missile(Empire empire, int x, int y, GameState gs) {
+    public Missile(Empire empire, int x, int y, GameState gs, double strength) {
         //System.out.println(empire.getName() + " launched a missile!");
         this.empire = empire;
         this.x = x;
         this.y = y;
         this.gs = gs;
+        this.strength = strength;
 
         if(empire.getEnemies().size() == 0) {
             gs.removeMissile(this);
@@ -35,8 +36,8 @@ public class Missile {
         int size = enemy.getTerritory().size();
         int firstpart = (int) (size * 0.90);
         int secondpart = (int) (size * 0.01);
-        if(Math.random() < 0.5) {
-            firstpart = (int) (size * 0);
+        if(Math.random() < 0.2) {
+            firstpart = (int) (size * 0.3);
         }
 
         target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
@@ -45,6 +46,10 @@ public class Missile {
         int yDist = (int) (target.getY() - y);
 
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
+
+        if(dist > strength) {
+            gs.removeMissile(this);
+        }
 
         xRate = xDist / dist;
         yRate = yDist / dist;
@@ -65,11 +70,11 @@ public class Missile {
         dist = Math.sqrt((xDist * xDist) + (yDist *yDist));
 
         if(dist <= 0.5) {
-            target.setStrength((float) (target.getStrength() * 0.1));
+            target.setStrength((float) (target.getStrength() * 0.01));
             //target.setHabitability((float) (target.getHabitability() * 0.9));
             for(Pixel p : target.getNeighbors()) {
                 if(p.getEmpire() == target.getEmpire()) {
-                    p.setStrength((float)(p.getStrength() * 0.2));
+                    p.setStrength((float)(p.getStrength() * 0.02));
                     //target.setHabitability((float) (target.getHabitability() * 0.95));
                 }
             }

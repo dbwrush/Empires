@@ -22,7 +22,7 @@ public class Pixel {
     }
 
     private int x, y, scale;
-    private static int maxAge = 2048;
+    private static int maxAge = 0;
     private static TerritoryManager tm;
     private float strength, borderFriction, habitability, need, age;
     private GameState gameState;
@@ -66,50 +66,46 @@ public class Pixel {
 
     public void render(Graphics g, ColorMode colorMode) {
         age += 0.5f;
+        if(age > maxAge) {
+            maxAge = (int) Math.ceil(age);
+        }
         g.setColor(getColor(colorMode));
         g.fillRect(x * scale, y * scale, scale, scale);
     }
 
-    public void tick() {
-        friendlyNeighbors = new ArrayList<>();
-        if (tm.getEmpireForPixel(this) != null) {
-            Empire empire = tm.getEmpireForPixel(this);
-            borderFriction = 0;
+    public void strengthPhase() {
+        if (neighbors == null) {
+            neighbors = gameState.getNeighbors(x, y);
+        }
+        if (getEmpire() != null) {
             strength += habitability;
-            if(strength > 255) {
-                strength = 255;
-            }
-            float tneed = 0;
-            if(neighbors == null) {
-                neighbors = gameState.getNeighbors(x, y);
-            }
-            if(empire.getCapital() == this) {
-                tneed += 4;
-            }
+            strength *= 0.99;
+        }
+    }
+
+    public void attackPhase() {
+        borderFriction = 0;
+        if(getEmpire() != null) {
+            Pixel target = null;
+            float bestStrength = 0;
+            Empire empire = tm.getEmpireForPixel(this);
             for (Pixel p : neighbors) {
                 Empire pEmpire = tm.getEmpireForPixel(p);
                 if (p.isHabitable()) {
-                    if (( 1 - p.habitability) * 3 < strength) {
-                        if (pEmpire == null) {
-                            //System.out.println("Empire is null!");
-                            tneed += 40f;
-                            empire.addTerritory(p);
-                            p.setAge(0);
-                            strength -= p.habitability;
-                        } else if (empire.getEnemies().contains(pEmpire) && p.strength * 3 < strength) {
-                            empire.addTerritory(p);
-                            p.setAge(0);
-                            strength -= p.strength;
-                            p.strength = strength / 2;
-                            strength /= 2;
-                        }
+                    if (pEmpire == null && (strength - ((1 - p.habitability) * 3)) > bestStrength) {
+                        //System.out.println("Empire is null!");
+                        target = p;
+                        bestStrength = strength - ((1 - p.habitability) * 3);
+                    } else if (empire.getEnemies().contains(pEmpire) && (strength - (p.strength * 3)) > bestStrength) {
+                        target = p;
+                        bestStrength = strength - (p.strength * 3);
                     }
                     if (pEmpire != null) {
                         if (pEmpire != empire) {
                             if(empire.getAllies().contains(pEmpire)) {
-                                borderFriction += (strength + p.strength) / 5 * habitability;
+                                borderFriction += (Math.abs(strength - p.strength) / 5) * ((255 - empire.getCoopIso()) / 255);
                             } else {
-                                borderFriction += (strength + p.strength) / 2 * habitability;
+                                borderFriction += Math.abs(strength - p.strength) * ((255 - empire.getCoopIso()) / 255);
                             }
                             float ideoDiff = (float) empire.ideoDifference(pEmpire);
                             float coopIso = (float) ((empire.getCoopIso() + pEmpire.getCoopIso()) / 4);
@@ -122,48 +118,85 @@ public class Pixel {
                             if (empire.getEnemies().contains(pEmpire) && ((ideoDiff + (borderFriction / 5)) * 2 < gameState.getWarThreshold())) {
                                 empire.makePeace(pEmpire);
                             }
-                            if (!empire.getAllies().contains(pEmpire)) {
-                                tneed += 10f;
-                            } else {
-                                tneed += 1f;
-                            }
-                        }
-                        if (empire.getEnemies().contains(pEmpire)) {
-                            tneed += 255f;
-                        }
-                        if (pEmpire == empire || empire.getAllies().contains(pEmpire)) {
-                            friendlyNeighbors.add(p);
                         }
                     }
+                }
+            }
+            if(target != null) {
+                if(bestStrength > 0) {
+                    if(target.getEmpire() != null) {
+                        strength -= target.getStrength();
+                    } else {
+                        strength -= 1 - target.getHabitability();
+                    }
+                    getEmpire().addTerritory(target);
+                    target.setStrength(strength * 0.5f);
+                    strength *= 0.5f;
+                    target.setAge(0);
                 } else {
-                    tneed += 1f;
-                }
-                tneed -= strength;
-                if(tneed <= 0) {
-                    tneed = 0;
+                    target.setStrength((float) (target.getStrength() - (0.5 * strength)));
+                    strength = (float) (strength - (target.getStrength() * 0.5));
                 }
             }
-            float totalNeed = tneed;
-            float maxNeed = 0;
-            for (Pixel p : friendlyNeighbors) {
-                totalNeed += p.need;
-                if(p.need > maxNeed) {
-                    maxNeed = p.need;
+        }
+    }
+
+    public void needPhase() {
+        friendlyNeighbors = new ArrayList<>();
+        need *= 0.99;
+        need += 1;
+        if(getEmpire() != null) {
+            for(Pixel p : neighbors) {
+                if(p.getEmpire() == getEmpire() || getEmpire().getAllies().contains(p.getEmpire())) {
+                    friendlyNeighbors.add(p);
+                } else {
+                    if(p.isHabitable()) {
+                        if(getEmpire().getEnemies().contains(p.getEmpire())) {
+                            need += 255;
+                        } else {
+                            need += 31;
+                        }
+                    } else {
+                        need += 32;
+                    }
                 }
             }
-            if (!friendlyNeighbors.isEmpty()) {
-                float factor = strength / totalNeed;
-                for (Pixel p : friendlyNeighbors) {
-                    p.strength += p.need * factor;
-                }
-                strength *= tneed / totalNeed;
+            if(getEmpire().getCapital() == this) {
+                need += 63;
             }
-            
-            if(tneed < maxNeed * 0.9) {
-                need = maxNeed * 0.9f;
-            } else {
-                need = tneed;
+            if(need > 255) {
+                need = 255;
             }
+        }
+    }
+
+    public void needSpreadPhase() {
+        float maxNeed = need;
+        for(Pixel p : friendlyNeighbors) {
+            if(p.need > maxNeed) {
+                maxNeed = p.need;
+            }
+        }
+        if(maxNeed * 0.99f > need) {
+            need = maxNeed * 0.99f;
+        }
+    }
+
+    public void resourcePhase() {
+        float totalNeed = need;
+        float maxNeed = need;
+        for(Pixel p : friendlyNeighbors) {
+            totalNeed += p.need;
+            if(p.need > maxNeed) {
+                maxNeed = p.need;
+            }
+        }
+        if(!friendlyNeighbors.isEmpty() && maxNeed > need) {
+            float factor = strength / totalNeed;
+            for(Pixel p : friendlyNeighbors) {
+                p.strength += p.need * factor;
+            }
+            strength *= need / totalNeed;
         }
     }
 
@@ -185,7 +218,7 @@ public class Pixel {
         if(tm.getEmpireForPixel(this) == null) {
             return;
         }
-        gameState.addMissile(new Missile(tm.getEmpireForPixel(this), x, y, gameState));
+        gameState.addMissile(new Missile(tm.getEmpireForPixel(this), x, y, gameState, strength));
     }
 
     public void spawnParatrooer() {
@@ -264,7 +297,7 @@ public class Pixel {
             case age:
                 if(empire != null) {
                     int a = (int) age;
-                    if(a > maxAge) {
+                    if(a > maxAge && maxAge < 2048) {
                         a = maxAge;
                     }
                     float hue = (float) a / maxAge * 120;  // 120 degrees covers the range from red to green
@@ -275,7 +308,7 @@ public class Pixel {
                 }
             case friction:
                 if(empire != null) {
-                    int f = (int) (borderFriction - empire.getCoopIso()) * 3;
+                    int f = (int) borderFriction;
                     if(f > 255) {
                         f = 255;
                     }

@@ -13,7 +13,7 @@ public class Boat {
     public Boat(Empire empire, double strength, int x, int y, GameState gs, double direction) {
         //System.out.println(empire.getName() + " launched a boat!");
         this.empire = empire;
-        this.strength = strength * 5;
+        this.strength = strength;
         this.x = x;
         this.y = y;
         this.gs = gs;
@@ -44,7 +44,7 @@ public class Boat {
             y = target.getY();
         } else {
             if(target.getEmpire() == null) {
-                if(target.getHabitability() < strength) {
+                if(target.getHabitability() * 3 < strength) {
                     //System.out.println("Boat discovered territory for " + empire.getName());
                     empire.addTerritory(target);
                     target.setAge(0);
@@ -52,7 +52,7 @@ public class Boat {
                 }
                 //System.out.println("Boat landed");
             } else if(empire.getEnemies().contains(target.getEmpire())) {
-                if(target.getStrength() < strength || Math.random() < 0.3) {
+                if(target.getStrength() * 3 < strength || Math.random() < 0.3) {
                     //System.out.println("Boat captured territory for " + empire.getName());
                     target.setStrength((float) strength);
                     empire.addTerritory(target);

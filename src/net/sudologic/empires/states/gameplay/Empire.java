@@ -65,31 +65,21 @@ public class Empire {
             }
         }
         if (tm.getEmpireForPixel(capital) != this) {
-            capital = getTerritory().get(0);
+            if(Math.random() < 0.3 && getTerritory().size() > 0) {
+                crisisChance();
+            } else if(Math.random() < 0.7) {
+                puppet(tm.getEmpireForPixel(capital));
+            }
+            if(getTerritory().size() > 0) {
+                capital = getTerritory().get(0);
+            }
         }
         while (getTerritory().contains(null)) {
             removeTerritory(null);
         }
-        if(maxSize > 0 && Math.random() < (maxSize - getTerritory().size()) / getTerritory().size()) {
+        if(maxSize > 0 && Math.random() < (double) (maxSize - getTerritory().size()) / getTerritory().size() && getTerritory().size() > 0) {
         //if (maxSize > 0 && Math.random() > territory.size() / (maxSize * 0.66f) && territory.size() > 10) {
-            Pixel p = getTerritory().get((int) (Math.random() * getTerritory().size()));
-            if (p == null) {
-                removeTerritory(null);
-            } else {
-                double r = Math.random();
-                if (r < 0.1) {
-                    setEnemy(p.revolt(), true, true);
-                } else if (r < 0.3) {
-                    for (Empire e : allies) {
-                        if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
-                            mergeInto(e);
-                            return;
-                        }
-                    }
-                } else if (r > 0.99) {
-                    tm.removeEmpire(this);
-                }
-            }
+            crisisChance();
         }
 
         if (getTerritory().size() > maxSize) {
@@ -97,7 +87,11 @@ public class Empire {
         }
         for (Empire e : allies) {
             if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
-                mergeInto(e);
+                if(getTerritory().size() > e.getTerritory().size()) {
+                    e.mergeInto(this);
+                } else {
+                    mergeInto(e);
+                }
             }
         }
         ArrayList<Empire> deadEmpires = new ArrayList<>();
@@ -122,10 +116,10 @@ public class Empire {
                 if(allies.contains(enemy)) {
                     if(ideoDifference(e) < ideoDifference(enemy)) {
                         deadEmpires.add(enemy);
-                        allies.remove(e);
+                        enemy.getAllies().remove(this);
                     } else {
                         deadEmpires.add(e);
-                        allies.remove(enemy);
+                        e.getAllies().remove(this);
                     }
                 }
             }
@@ -134,6 +128,37 @@ public class Empire {
             enemies.remove(e);
             allies.remove(e);
         }
+    }
+
+    public void crisisChance() {
+        Pixel p = getTerritory().get((int) (Math.random() * getTerritory().size()));
+        if (p == null) {
+            removeTerritory(null);
+        } else {
+            if (Math.random() < 0.1) {
+                setEnemy(p.revolt(), true, true);
+            } else if (Math.random() < 0.3) {
+                for (Empire e : allies) {
+                    if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
+                        if(getTerritory().size() > e.getTerritory().size()) {
+                            e.mergeInto(this);
+                        } else {
+                            mergeInto(e);
+                        }
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    public void puppet(Empire e) {
+        ideology[0] = (ideology[0] + e.ideology[0]) / 2;
+        ideology[1] = (ideology[1] + e.ideology[1]) / 2;
+        ideology[2] = (ideology[2] + e.ideology[2]) / 2;
+        makePeace(e);
+        setAlly(e);
     }
 
     public Pixel getCapital() {
@@ -158,9 +183,7 @@ public class Empire {
         Pixel[] pixels = getTerritory().toArray(Pixel[]::new);
         for(Pixel p : pixels) {
             if(p != null && tm.getEmpireForPixel(p) == this) {
-                float age = p.getAge();
                 e.addTerritory(p);
-                p.setAge(age);
             }
         }
     }
