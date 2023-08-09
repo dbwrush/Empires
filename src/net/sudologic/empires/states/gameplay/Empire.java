@@ -130,6 +130,10 @@ public class Empire {
         }
     }
 
+    public double[] getIdeology() {
+        return ideology;
+    }
+
     public void crisisChance() {
         Pixel p = getTerritory().get((int) (Math.random() * getTerritory().size()));
         if (p == null) {
@@ -191,13 +195,16 @@ public class Empire {
 
     public void render(Graphics g) {
         g.setColor(Color.white);
+        if(capital == null) {
+            return;
+        }
         int x = (int) (capital.getX() - (name.length() * 0.66f));
         int y = capital.getY();
-        if(x < 0) {
-            x = 0;
+        if(x < 2) {
+            x = 2;
         }
-        if(x + (name.length() * 1.5f) > gameState.getWidth()) {
-            x -= (name.length() * 0.4f);
+        if(x > gameState.getWidth()) {
+            x = (int) (gameState.getWidth() - (name.length() * 0.4f));
         }
         if(y < 2) {
             y = 2;
@@ -230,7 +237,7 @@ public class Empire {
         if(!enemies.contains(e)) {
             //System.out.println(name + " is now an enemy of " + e.getName());
             enemies.add(e);
-            e.setEnemy(this, true, false);
+            e.setEnemy(this, false, false);
             if(recur) {
                 for(Empire a : allies) {
                     a.setEnemy(e, false, true);

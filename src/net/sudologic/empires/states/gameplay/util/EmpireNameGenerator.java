@@ -17,7 +17,8 @@ public class EmpireNameGenerator {
             "Sweden", "Greece", "Turkey", "Thailand", "Antarctica", "Chile", "Iceland", "Austria", "Kenya", "Indonesia",
             "Denmark", "England", "Scotland", "Wales", "Ireland", "Norway", "Finland", "Belgium", "Portugal", "Singapore", "Korea",
             "Czechia", "Israel", "Switzerland", "Colombia", "Peru", "Cuba", "Ukraine", "Vietnam", "Jamaica",
-            "Hawaii"
+            "Hawaii", "Mongolia", "Belarus", "Madagascar", "Liberia", "Libya", "Algeria", "Pakistan", "Iran", "Afghanistan",
+            "Indonesia", "Brazil", "Bolivia", "Congo"
     };
 
     public static String generateEmpireName(int isoCoop, int authLib, int leftRight, String placeName) {

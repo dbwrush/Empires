@@ -104,6 +104,7 @@ public class GameState extends State {
                     e.addTerritory(p);
                     e.setCapital(p);
                     e.getCapital().setStrength(2);
+                    p.setLocalIdeology(new double[]{e.getCoopIso(), e.getAuthLib(), e.getLeftRight()});
                 }
             }
             empires.add(e);

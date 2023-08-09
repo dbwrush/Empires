@@ -28,6 +28,8 @@ public class Pixel {
     private double[] localIdeology;
     private ArrayList<Pixel> neighbors, friendlyNeighbors;
 
+    private Empire historicEmpire;
+
     public Pixel(int x, int y, double habitability, int scale, GameState gameState) {
         this.gameState = gameState;
         this.habitability = Math.max(habitability, 0);
@@ -36,29 +38,30 @@ public class Pixel {
         this.scale = scale;
         this.need = 0;
         tm = gameState.getTerritoryManager();
-        localIdeology = new double[3];
-        localIdeology[0] = 127;
-        localIdeology[1] = 127;
-        localIdeology[2] = 127;
     }
 
     public Empire revolt() {
         Empire old = tm.getEmpireForPixel(this);
 
         Empire e = new Empire(gameState, old.getName(), localIdeology);
+        if(old != historicEmpire && historicEmpire != null) {
+            e = historicEmpire;
+            //System.out.println("Revolt in " + old.getName() + ", " + e.getName() + " has returned!");
+        } else {
+            //System.out.println("Revolt in " + old.getName() + ", " + e.getName() + " has formed.");
+        }
         e.addTerritory(this);
         this.age = 0;
-        setStrength(getStrength() * 3);
+        setStrength(getStrength() * 8);
         e.setEnemy(old, true, true);
         old.setEnemy(e, true, true);
         e.setCapital(this);
         for(Pixel p : neighbors) {
             if(p.getEmpire() == old && Math.random() < 0.5) {
                 e.addTerritory(p);
-                p.setStrength(p.getStrength() * 2);
+                p.setStrength(p.getStrength() * 5);
             }
         }
-        //System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
         return e;
     }
 
@@ -90,15 +93,32 @@ public class Pixel {
         if (getEmpire() != null) {
             strength += habitability;
             strength *= 0.99;
-            localIdeology[0] = localIdeology[0] * 0.999 + getEmpire().getCoopIso() * 0.001;
-            localIdeology[1] = localIdeology[1] * 0.999 + getEmpire().getAuthLib() * 0.001;
-            localIdeology[2] = localIdeology[2] * 0.999 + getEmpire().getLeftRight() * 0.001;
+            if(historicEmpire == null) {
+                historicEmpire = getEmpire();
+            }
+            if (localIdeology == null) {
+                setLocalIdeology(historicEmpire.getIdeology());
+            }
+            shiftIdeology(new double[]{getEmpire().getCoopIso(), getEmpire().getAuthLib(), getEmpire().getLeftRight()}, 0.01);
             double localIdeoDiff = Math.abs(getEmpire().getCoopIso() - localIdeology[0] + getEmpire().getAuthLib() - localIdeology[1] + getEmpire().getLeftRight() - localIdeology[2]) / 3;
-            if(Math.random() < localIdeoDiff / 100000) {
-                revolt();
+            if(strength < habitability * 10) {
+                if(Math.random() < localIdeoDiff / 1000000) {
+                    revolt();
+                } else {
+                    shiftIdeology(historicEmpire.getIdeology(), 0.1);
+                }
+            }
+            if(localIdeoDiff < 0.01 && historicEmpire != getEmpire()) {
+                //System.out.println("Assimilating conquered territory");
+                historicEmpire = getEmpire();
             }
         }
+    }
 
+    public void shiftIdeology(double[] ideology, double newProp) {
+        localIdeology[0] = localIdeology[0] * (1 - newProp) + ideology[0] * newProp;
+        localIdeology[1] = localIdeology[1] * (1 - newProp) + ideology[1] * newProp;
+        localIdeology[2] = localIdeology[2] * (1 - newProp) + ideology[2] * newProp;
     }
 
     public void attackPhase() {
@@ -185,6 +205,10 @@ public class Pixel {
                 need = 255;
             }
         }
+    }
+
+    public void setLocalIdeology(double[] localIdeology) {
+        this.localIdeology = new double[]{localIdeology[0], localIdeology[1], localIdeology[2]};
     }
 
     public void needSpreadPhase() {
@@ -388,7 +412,7 @@ public class Pixel {
                 }
                 return new Color(0, (int) (habitability * 200), 0);
             case localIdeology:
-                if(habitability > 0) {
+                if(habitability > 0 && localIdeology != null) {
                     return new Color((int) localIdeology[0], (int) localIdeology[1], (int) localIdeology[2]);
                 }
             default:
