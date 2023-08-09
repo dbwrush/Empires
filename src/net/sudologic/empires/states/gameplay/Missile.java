@@ -1,7 +1,6 @@
 package net.sudologic.empires.states.gameplay;
 
 import java.awt.*;
-import java.util.ArrayList;
 
 public class Missile {
     private Empire empire;
@@ -34,7 +33,7 @@ public class Missile {
 
     public void pickTarget(Empire enemy) {
         int size = enemy.getTerritory().size();
-        int firstpart = (int) (size * 0.90);
+        int firstpart = (int) (size * 0.95);
         int secondpart = (int) (size * 0.01);
         if(Math.random() < 0.2) {
             firstpart = (int) (size * 0.3);

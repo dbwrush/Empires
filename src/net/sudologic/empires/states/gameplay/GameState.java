@@ -10,9 +10,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class GameState extends State {
 
@@ -151,32 +148,6 @@ public class GameState extends State {
             neighbors.add(pixels[leftOne][y + 1]);
         }
         neighbors.add(pixels[leftOne][y]);
-
-        /*
-        if(x > 0 && y > 0) {
-            neighbors.add(pixels[x - 1][y - 1]);
-        }
-        if(x > 0) {
-            neighbors.add(pixels[x - 1][y]);
-        }
-        if(x > 0 && y < pixels[0].length - 1) {
-            neighbors.add(pixels[x - 1][y + 1]);
-        }
-        if(y > 0) {
-            neighbors.add(pixels[x][y - 1]);
-        }
-        if(y > 0 && x < pixels.length - 1) {
-            neighbors.add(pixels[x + 1][y - 1]);
-        }
-        if(x < pixels.length - 1) {
-            neighbors.add(pixels[x + 1][y]);
-        }
-        if(y < pixels[0].length - 1) {
-            neighbors.add(pixels[x][y + 1]);
-        }
-        if(x < pixels.length - 1 && y < pixels[0].length - 1) {
-            neighbors.add(pixels[x + 1][y + 1]);
-        }*/
 
         return neighbors;
     }

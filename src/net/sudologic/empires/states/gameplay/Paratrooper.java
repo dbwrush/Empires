@@ -35,7 +35,7 @@ public class Paratrooper {
     public void pickTarget(Empire enemy) {
         int size = enemy.getTerritory().size();
         int firstpart = (int) (size * 0.00);
-        int secondpart = (int) (size * 0.01);
+        int secondpart = (int) (size * 0.30);
         target = enemy.getTerritory().get((int) (secondpart * Math.random()) + firstpart);
 
         int xDist = (int) (target.getX() - x);

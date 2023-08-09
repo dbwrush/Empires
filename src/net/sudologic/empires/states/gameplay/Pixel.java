@@ -1,11 +1,9 @@
 package net.sudologic.empires.states.gameplay;
 
-import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
 import net.sudologic.empires.states.gameplay.util.TerritoryManager;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class Pixel {
 
@@ -48,6 +46,12 @@ public class Pixel {
         e.setEnemy(old, true, true);
         old.setEnemy(e, true, true);
         e.setCapital(this);
+        for(Pixel p : neighbors) {
+            if(p.getEmpire() == old && Math.random() < 0.5) {
+                e.addTerritory(p);
+                p.setStrength((float) (p.getHabitability() * 20));
+            }
+        }
         //System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
         return e;
     }
@@ -65,7 +69,7 @@ public class Pixel {
     }
 
     public void render(Graphics g, ColorMode colorMode) {
-        age += 0.5f;
+        age += 1f;
         if(age > maxAge) {
             maxAge = (int) Math.ceil(age);
         }
@@ -143,8 +147,7 @@ public class Pixel {
 
     public void needPhase() {
         friendlyNeighbors = new ArrayList<>();
-        need *= 0.99;
-        need += 1;
+        need *= 0.9;
         if(getEmpire() != null) {
             for(Pixel p : neighbors) {
                 if(p.getEmpire() == getEmpire() || getEmpire().getAllies().contains(p.getEmpire())) {
@@ -152,17 +155,17 @@ public class Pixel {
                 } else {
                     if(p.isHabitable()) {
                         if(getEmpire().getEnemies().contains(p.getEmpire())) {
-                            need += 255;
+                            need += 63;
                         } else {
-                            need += 31;
+                            need += 7;
                         }
                     } else {
-                        need += 32;
+                        need += 3;
                     }
                 }
             }
             if(getEmpire().getCapital() == this) {
-                need += 63;
+                need += 7;
             }
             if(need > 255) {
                 need = 255;
@@ -177,8 +180,8 @@ public class Pixel {
                 maxNeed = p.need;
             }
         }
-        if(maxNeed * 0.99f > need) {
-            need = maxNeed * 0.99f;
+        if(maxNeed * 0.9f > need) {
+            need = maxNeed * 0.9f;
         }
     }
 
@@ -274,13 +277,22 @@ public class Pixel {
                             s /= friendlyNeighbors.size();
                         }
                     }
-                    if (s > 255) {
-                        s = 255;
-                    }
-                    if(s < 0) {
-                        s = 0;
-                    }
-                    return new Color(s, 0, 0);
+                    int r = (empire.getColor().getRed() * s) / 255;
+                    if (r > 255)
+                        r = 255;
+                    if (r < 0)
+                        r = 0;
+                    int g = (empire.getColor().getGreen() * s) / 255;
+                    if (g > 255)
+                        g = 255;
+                    if (g < 0)
+                        g = 0;
+                    int b = (empire.getColor().getBlue() * s) / 255;
+                    if (b > 255)
+                        b = 255;
+                    if (b < 0)
+                        b = 0;
+                    return new Color(r, g, b);
                 }
             case ideology:
                 if (empire != null) {
@@ -289,10 +301,16 @@ public class Pixel {
             case need:
                 if (empire != null) {
                     int n = (int) need;
-                    if (n > 255) {
-                        n = 255;
-                    }
-                    return new Color(n, 0, 0);
+                    int r = (empire.getColor().getRed() * n) / 255;
+                    if (r > 255)
+                        r = 255;
+                    int g = (empire.getColor().getGreen() * n) / 255;
+                    if (g > 255)
+                        g = 255;
+                    int b = (empire.getColor().getBlue() * n) / 255;
+                    if (b > 255)
+                        b = 255;
+                    return new Color(r, g, b);
                 }
             case age:
                 if(empire != null) {
@@ -309,13 +327,16 @@ public class Pixel {
             case friction:
                 if(empire != null) {
                     int f = (int) borderFriction;
-                    if(f > 255) {
-                        f = 255;
-                    }
-                    if(f < 0) {
-                        f = 0;
-                    }
-                    return new Color(f, 0, 0);
+                    int r = (empire.getColor().getRed() * f) / 255;
+                    if (r > 255)
+                        r = 255;
+                    int g = (empire.getColor().getGreen() * f) / 255;
+                    if (g > 255)
+                        g = 255;
+                    int b = (empire.getColor().getBlue() * f) / 255;
+                    if (b > 255)
+                        b = 255;
+                    return new Color(r, g, b);
                 }
             case alliance:
                 if(empire != null) {

@@ -1,12 +1,10 @@
 package net.sudologic.empires.states.gameplay;
 
-import net.sudologic.empires.Game;
 import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
 import net.sudologic.empires.states.gameplay.util.TerritoryManager;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class Empire {
@@ -184,6 +182,7 @@ public class Empire {
         for(Pixel p : pixels) {
             if(p != null && tm.getEmpireForPixel(p) == this) {
                 e.addTerritory(p);
+                p.setAge(0);
             }
         }
     }

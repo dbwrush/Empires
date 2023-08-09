@@ -17,8 +17,6 @@ public class Game implements Runnable{
     private KeyManager keyManager;
     private MouseManager mouseManager;
 
-    private FileManager fileManager;
-
     private Display display;
 
     private GameState gameState;
@@ -38,7 +36,6 @@ public class Game implements Runnable{
         this.warThreshold = warThreshold;
         this.scale = scale;
         keyManager = new KeyManager();
-        fileManager = new FileManager();
     }
 
     private void init() {
@@ -113,13 +110,6 @@ public class Game implements Runnable{
 
     public void tick() {
         State.getCurrentState().tick();
-        if(State.getCurrentState() instanceof GameState) {
-            GameState gs = (GameState) State.getCurrentState();
-            /*if(gs.getEmpires().size() == 1) {
-                running = false;
-                System.out.println(gs.getEmpires().get(0).getName() + " has won the game.");
-            }*/
-        }
     }
 
     public void render() {

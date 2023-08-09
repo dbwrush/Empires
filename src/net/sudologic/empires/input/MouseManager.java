@@ -1,7 +1,6 @@
 package net.sudologic.empires.input;
 
 import net.sudologic.empires.Game;
-import net.sudologic.empires.states.gameplay.GameState;
 
 import javax.swing.*;
 import java.awt.*;
