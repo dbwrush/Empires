@@ -1,10 +1,12 @@
 package net.sudologic.empires.states.gameplay;
 
+import net.sudologic.empires.Game;
 import net.sudologic.empires.states.gameplay.util.EmpireNameGenerator;
 import net.sudologic.empires.states.gameplay.util.TerritoryManager;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class Empire {
@@ -36,8 +38,8 @@ public class Empire {
         this.gameState = gameState;
     }
 
-    public Empire(GameState gameState, String oldName) {
-        ideology = new double[]{Math.random() * 255, Math.random() * 255, Math.random() * 255};
+    public Empire(GameState gameState, String oldName, double[] ideology) {
+        this.ideology = ideology;
         //CoopIso      AuthLib        LeftRight
         String[] p = oldName.split(" ");
         this.name = EmpireNameGenerator.generateEmpireName((int) ideology[0], (int) ideology[1], (int) ideology[2], p[p.length - 1]);
@@ -133,9 +135,9 @@ public class Empire {
         if (p == null) {
             removeTerritory(null);
         } else {
-            if (Math.random() < 0.1) {
+            if (Math.random() < 0.01) {
                 setEnemy(p.revolt(), true, true);
-            } else if (Math.random() < 0.3) {
+            } else if (Math.random() < 0.1) {
                 for (Empire e : allies) {
                     if (ideoDifference(e) < (getCoopIso() + e.getCoopIso()) * (4 * Math.random()) * mergeDifficulty) {
                         if(getTerritory().size() > e.getTerritory().size()) {

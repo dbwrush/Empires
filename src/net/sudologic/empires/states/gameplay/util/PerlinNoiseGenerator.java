@@ -7,7 +7,7 @@ public class PerlinNoiseGenerator {
     private int height;
     private float frequency;
     private int octaves;
-    private float[][] noise;
+    private double[][] noise;
 
     public PerlinNoiseGenerator(int width, int height, float frequency, int octaves) {
         this.width = width;
@@ -17,12 +17,12 @@ public class PerlinNoiseGenerator {
         this.noise = generateNoise();
     }
 
-    public float[][] getNoise() {
+    public double[][] getNoise() {
         return noise;
     }
 
-    private float[][] generateNoise() {
-        float[][] noise = new float[width][height];
+    private double[][] generateNoise() {
+        double[][] noise = new double[width][height];
         Random random = new Random();
 
         // Generate random gradients

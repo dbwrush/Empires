@@ -10,6 +10,9 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class GameState extends State {
 
@@ -64,11 +67,11 @@ public class GameState extends State {
         System.out.println("Generating Terrain");
         pixels = new Pixel[width][height];
         PerlinNoiseGenerator perlin = new PerlinNoiseGenerator(width, height, 0.01f, 4);
-        float[][] habitability = perlin.getNoise();
+        double[][] habitability = perlin.getNoise();
         for(int x = 0; x < pixels.length; x++) {
             for(int y = 0; y < pixels[0].length; y++) {
                 //System.out.println("X: " + x + " Y: " + y);
-                float h = (habitability[x][y] + 1) / 2;
+                double h = (habitability[x][y] + 1) / 2;
                 if(h < 0.4) {
                     h = 0;
                 }
@@ -149,6 +152,32 @@ public class GameState extends State {
         }
         neighbors.add(pixels[leftOne][y]);
 
+        /*
+        if(x > 0 && y > 0) {
+            neighbors.add(pixels[x - 1][y - 1]);
+        }
+        if(x > 0) {
+            neighbors.add(pixels[x - 1][y]);
+        }
+        if(x > 0 && y < pixels[0].length - 1) {
+            neighbors.add(pixels[x - 1][y + 1]);
+        }
+        if(y > 0) {
+            neighbors.add(pixels[x][y - 1]);
+        }
+        if(y > 0 && x < pixels.length - 1) {
+            neighbors.add(pixels[x + 1][y - 1]);
+        }
+        if(x < pixels.length - 1) {
+            neighbors.add(pixels[x + 1][y]);
+        }
+        if(y < pixels[0].length - 1) {
+            neighbors.add(pixels[x][y + 1]);
+        }
+        if(x < pixels.length - 1 && y < pixels[0].length - 1) {
+            neighbors.add(pixels[x + 1][y + 1]);
+        }*/
+
         return neighbors;
     }
 
@@ -186,6 +215,9 @@ public class GameState extends State {
         }
         if(km.isKeyPressed(KeyEvent.VK_9)) {
             colorMode = Pixel.ColorMode.habitability;
+        }
+        if(km.isKeyPressed(KeyEvent.VK_0)) {
+            colorMode = Pixel.ColorMode.localIdeology;
         }
         ArrayList<Empire> empires = (ArrayList<Empire>) tm.getEmpires();
         Collections.shuffle(empires);

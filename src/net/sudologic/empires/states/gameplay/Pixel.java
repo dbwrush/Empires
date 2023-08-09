@@ -16,17 +16,19 @@ public class Pixel {
         friction,
         alliance,
         perspective,
-        habitability
+        habitability,
+        localIdeology
     }
 
     private int x, y, scale;
     private static int maxAge = 0;
     private static TerritoryManager tm;
-    private float strength, borderFriction, habitability, need, age;
+    private double strength, borderFriction, habitability, need, age;
     private GameState gameState;
+    private double[] localIdeology;
     private ArrayList<Pixel> neighbors, friendlyNeighbors;
 
-    public Pixel(int x, int y, float habitability, int scale, GameState gameState) {
+    public Pixel(int x, int y, double habitability, int scale, GameState gameState) {
         this.gameState = gameState;
         this.habitability = Math.max(habitability, 0);
         this.x = x;
@@ -34,22 +36,26 @@ public class Pixel {
         this.scale = scale;
         this.need = 0;
         tm = gameState.getTerritoryManager();
+        localIdeology = new double[3];
+        localIdeology[0] = 127;
+        localIdeology[1] = 127;
+        localIdeology[2] = 127;
     }
 
     public Empire revolt() {
         Empire old = tm.getEmpireForPixel(this);
 
-        Empire e = new Empire(gameState, old.getName());
+        Empire e = new Empire(gameState, old.getName(), localIdeology);
         e.addTerritory(this);
         this.age = 0;
-        strength = habitability * 20;
+        setStrength(getStrength() * 3);
         e.setEnemy(old, true, true);
         old.setEnemy(e, true, true);
         e.setCapital(this);
         for(Pixel p : neighbors) {
             if(p.getEmpire() == old && Math.random() < 0.5) {
                 e.addTerritory(p);
-                p.setStrength((float) (p.getHabitability() * 20));
+                p.setStrength(p.getStrength() * 2);
             }
         }
         //System.out.println("Revolt in " + old.getName() + ", " + empire.getName() + " has formed.");
@@ -84,14 +90,22 @@ public class Pixel {
         if (getEmpire() != null) {
             strength += habitability;
             strength *= 0.99;
+            localIdeology[0] = localIdeology[0] * 0.999 + getEmpire().getCoopIso() * 0.001;
+            localIdeology[1] = localIdeology[1] * 0.999 + getEmpire().getAuthLib() * 0.001;
+            localIdeology[2] = localIdeology[2] * 0.999 + getEmpire().getLeftRight() * 0.001;
+            double localIdeoDiff = Math.abs(getEmpire().getCoopIso() - localIdeology[0] + getEmpire().getAuthLib() - localIdeology[1] + getEmpire().getLeftRight() - localIdeology[2]) / 3;
+            if(Math.random() < localIdeoDiff / 100000) {
+                revolt();
+            }
         }
+
     }
 
     public void attackPhase() {
         borderFriction = 0;
         if(getEmpire() != null) {
             Pixel target = null;
-            float bestStrength = 0;
+            double bestStrength = 0;
             Empire empire = tm.getEmpireForPixel(this);
             for (Pixel p : neighbors) {
                 Empire pEmpire = tm.getEmpireForPixel(p);
@@ -174,7 +188,7 @@ public class Pixel {
     }
 
     public void needSpreadPhase() {
-        float maxNeed = need;
+        double maxNeed = need;
         for(Pixel p : friendlyNeighbors) {
             if(p.need > maxNeed) {
                 maxNeed = p.need;
@@ -186,8 +200,8 @@ public class Pixel {
     }
 
     public void resourcePhase() {
-        float totalNeed = need;
-        float maxNeed = need;
+        double totalNeed = need;
+        double maxNeed = need;
         for(Pixel p : friendlyNeighbors) {
             totalNeed += p.need;
             if(p.need > maxNeed) {
@@ -195,7 +209,7 @@ public class Pixel {
             }
         }
         if(!friendlyNeighbors.isEmpty() && maxNeed > need) {
-            float factor = strength / totalNeed;
+            double factor = strength / totalNeed;
             for(Pixel p : friendlyNeighbors) {
                 p.strength += p.need * factor;
             }
@@ -236,7 +250,7 @@ public class Pixel {
         return neighbors;
     }
 
-    public void setStrength(float strength) {
+    public void setStrength(double strength) {
         this.strength = strength;
     }
 
@@ -373,6 +387,10 @@ public class Pixel {
                     return new Color(0, 0, 100);
                 }
                 return new Color(0, (int) (habitability * 200), 0);
+            case localIdeology:
+                if(habitability > 0) {
+                    return new Color((int) localIdeology[0], (int) localIdeology[1], (int) localIdeology[2]);
+                }
             default:
                 if (habitability == 0) {
                     return new Color(0, 0, 100);
@@ -382,7 +400,7 @@ public class Pixel {
         }
     }
 
-    public float getAge() {
+    public double getAge() {
         return age;
     }
 

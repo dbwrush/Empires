@@ -8,6 +8,7 @@ import net.sudologic.empires.states.State;
 
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.util.Arrays;
 
 public class Game implements Runnable{
     private final double warThreshold;
@@ -82,6 +83,7 @@ public class Game implements Runnable{
 
             if(timer >= 1000000000) {
                 System.out.println("fps: " + ticks);
+                System.out.println("Empires: " + gameState.getEmpires().size());
                 ticks = 0;
                 timer = 0;
             }
